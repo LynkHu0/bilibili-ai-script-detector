@@ -13,7 +13,7 @@
 
 ## 下载与相关项目
 
-- **安装包：** [下载最新版本](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest)，按处理器选择 `-mac-arm64.zip`（Apple 芯片）或 `-mac-x64.zip`（Intel），内置 Node.js，无需另行安装。当前发布版本为 **1.5.7**。
+- **安装包：** [下载最新版本](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest)，按处理器选择 `-mac-arm64.zip`（Apple 芯片）或 `-mac-x64.zip`（Intel），内置 Node.js，无需另行安装。当前发布版本为 **1.5.8**。
 - **问题反馈：** [GitHub Issues](https://github.com/LynkHu0/stop-the-slop-for-brower/issues)。反馈前请移除 Key、Cookie、连接码和账户信息。
 - **上游项目：** [Stop the Slop — YouTube AI Script Detector](https://github.com/MauroPello/stop-the-slop)。
 
@@ -119,3 +119,5 @@ node --test local-server/test.mjs local-server/*.test.mjs tests/*.test.cjs
 发布包内置 Node.js，分为 arm64 和 x64。开发源码通过 `npm ci --prefix local-server` 安装依赖后，可使用 esbuild 将 `local-server/server.mjs` 打包为 ESM（platform=node、target=node22）；将该文件传给 `package-release.py --server-bundle`。
 
 `package-release.py` 还需要 `--arch`、`--node-archive`、`--node-checksums`、`--output` 参数。Node 归档及 SHASUMS256.txt 从同一官方版本目录下载；脚本会校验 SHA256，仅提取对应架构的 Node 二进制和许可证，排除私人运行数据。
+
+1.5.8：视频卡片结果精简为百分比，无可用字幕时显示“无文案”；完整说明可悬停查看。

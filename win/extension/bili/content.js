@@ -24,12 +24,12 @@
   }, {rootMargin:'200px 0px', threshold:0}) : null;
 
   function paint(button,result){
-    button.textContent=`${BiliSlop.label(result.score)} · ${Math.round(result.score*100)}`;
+    button.textContent=`${Math.round(result.score*100)}%`;
     button.style.background=result.score>.7?'#a9233aeb':result.score<.4?'#17624deb':'#795b19eb';
     button.title=`${result.provider==='deepseek'?'DeepSeek API':'ChatGPT 套餐'} · ${result.engine || 'gpt-6-luna'} · 本机已检测结果；启发式评分，不能证明创作来源`;
   }
   function errorLabel(error){
-    if(error.code==='NO_SUBTITLES')return '暂无可用字幕';
+    if(error.code==='NO_SUBTITLES')return '无文案';
     if(/队列已满/.test(error.message))return '队列已满 · 稍后再试';
     if(/字幕不足/.test(error.message))return '字幕太短 · 无法检测';
     if(/连接码|登录ChatGPT|本地检测程序|本地程序/.test(error.message))return '请连接检测服务';

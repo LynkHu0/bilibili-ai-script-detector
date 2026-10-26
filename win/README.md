@@ -13,7 +13,7 @@
 
 ## 下载与相关项目
 
-- **安装包：** [下载最新版本](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest)，解压后加载扩展。当前发布版本为 **1.5.7**。
+- **安装包：** [下载最新版本](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest)，解压后加载扩展。当前发布版本为 **1.5.8**。
 - **问题反馈：** [GitHub Issues](https://github.com/LynkHu0/stop-the-slop-for-brower/issues)。反馈前请移除 Key、Cookie、连接码和账户信息。
 - **上游项目：** [Stop the Slop — YouTube AI Script Detector](https://github.com/MauroPello/stop-the-slop)。
 
@@ -113,3 +113,5 @@ node --test local-server/test.mjs local-server/*.test.mjs tests/*.test.cjs
 感谢 **MauroPello** 的 [Stop the Slop](https://github.com/MauroPello/stop-the-slop)。本适配参考 commit `dec988b03ff63224aa6d6c796b5963eb3ccac95e`。
 
 上游 README 声明 MIT，但当前尚未补齐所需的完整许可文件及版权声明。本仓库没有将“已公开源码”等同于已完善开源授权，也未擅自添加 MIT 标识。复用与再分发前请查看 **[UPSTREAM.md](UPSTREAM.md)** 中的待确认事项。
+
+1.5.8：视频卡片结果精简为百分比，无可用字幕时显示“无文案”；完整说明可悬停查看。
