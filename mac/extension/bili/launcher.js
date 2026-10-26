@@ -26,10 +26,8 @@ function applyTheme(theme){
  localStorage.setItem('sts_theme',theme);
 }
 async function connection(){
- const token=(await chrome.storage.local.get('biliLocalToken')).biliLocalToken;
- if(!token)throw new Error('请在连接设置中保存本机连接码。');
  let response;
- try{response=await fetch(BASE+'/api/status',{headers:{Authorization:`Bearer ${token}`},signal:AbortSignal.timeout(5000)});}
+ try{response=await BiliLocal.request('/api/status');}
  catch{throw new Error('请先启动本地检测程序。');}
  const data=await response.json();if(!response.ok)throw new Error(data.error || '本机连接失败。');
  if(!data.connected)throw new Error(data.provider==='deepseek'?'请在本地设置中填写DeepSeek API Key。':'请先打开本地登录页面，连接ChatGPT。');
@@ -62,14 +60,6 @@ async function initAutoDetectSetting(){
  autoDetect.addEventListener?.('change',()=>{chrome.storage.local.set({biliAutoDetect:!!autoDetect.checked}).catch(()=>{});});
 }
 initAutoDetectSetting();
-$('save').onclick=async()=>{
- const token=$('token').value.trim();
- if(!/^[A-Za-z0-9_-]{43}$/.test(token)){$('connection-message').textContent='连接码格式不正确，请完整复制。';return;}
- try{
-  await chrome.storage.local.set({biliLocalToken:token});await connection();
-  $('connection-message').textContent='已连接';$('connection-settings').classList.add('hidden');await initialState();
- }catch(e){$('connection-message').textContent=e.message;}
-};
 $('theme-toggle').onclick=()=>{
  const themes=['system','dark','light'];
  applyTheme(themes[(themes.indexOf(localStorage.getItem('sts_theme') || 'system')+1)%themes.length]);
@@ -86,17 +76,14 @@ async function initialState(){
 (async()=>{
  [activeTab]=await chrome.tabs.query({active:true,currentWindow:true});
  if(activeTab?.url && new URL(activeTab.url).hostname==='www.youtube.com'){location.replace('../popup/popup.html');return;}
- const settings=await chrome.storage.local.get(['biliLocalToken','theme_preference']);
- $('token').value=settings.biliLocalToken || '';
+ const settings=await chrome.storage.local.get(['theme_preference']);
  applyTheme(settings.theme_preference || localStorage.getItem('sts_theme') || 'system');
  await initialState();
 })().catch(e=>{error(e.message);$('connection-settings').classList.remove('hidden');});
 
 async function refreshUsage(){
  try{
-  const token=(await chrome.storage.local.get('biliLocalToken')).biliLocalToken;
-  if(!token){$('usage-primary').textContent='连接本地服务后显示用量';return;}
-  const r=await fetch(BASE+'/api/usage',{headers:{Authorization:`Bearer ${token}`},signal:AbortSignal.timeout(5000)});
+  const r=await BiliLocal.request('/api/usage');
   if(!r.ok)throw new Error();BiliUsageView.render(await r.json());
  }catch{$('usage-primary').textContent='用量暂不可读取';}
 }

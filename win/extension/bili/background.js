@@ -13,9 +13,7 @@ function ensureBiliJob(parsed,retryFailed=true){
 chrome.runtime.onMessage.addListener((m,sender,reply)=>{
  if(m?.type==='BILI_CONFIG'){
   (async()=>{
-   const settings=await chrome.storage.local.get('biliLocalToken');
-   if(!settings.biliLocalToken)return {maxConcurrent:1};
-   const response=await fetch('http://127.0.0.1:17653/api/status',{headers:{Authorization:`Bearer ${settings.biliLocalToken}`},signal:AbortSignal.timeout(5000)});
+   const response=await BiliLocal.request('/api/status');
    if(!response.ok)return {maxConcurrent:1};
    const status=await response.json();
    return {maxConcurrent:status.connected&&Number.isInteger(status.maxConcurrent)&&status.maxConcurrent>=1&&status.maxConcurrent<=100?status.maxConcurrent:1};
@@ -33,13 +31,10 @@ chrome.runtime.onMessage.addListener((m,sender,reply)=>{
  return false;
 });
 async function biliAnalyze({bvid,p},progress=()=>{}) {
-  const settings = await chrome.storage.local.get('biliLocalToken');
-  if (!settings.biliLocalToken) throw new Error('请先打开本地检测程序，在插件中保存本机连接码。');
   const base = 'http://127.0.0.1:17653';
-  const authorization = `Bearer ${settings.biliLocalToken}`;
   let health;
   try {
-    const response = await fetch(`${base}/api/status`, {headers:{Authorization:authorization}, signal:AbortSignal.timeout(5000)});
+    const response = await BiliLocal.request('/api/status');
     health = await response.json();
     if (!response.ok) throw new Error(health.error || '本地程序连接失败。');
   } catch(e) { throw new Error(e.message.includes('fetch') ? '无法连接本地检测程序，请先启动它。' : e.message); }
@@ -62,8 +57,8 @@ async function biliAnalyze({bvid,p},progress=()=>{}) {
   const captions = await BiliSlop.json(url.href);
   const transcript = (captions.body || []).map(s => s.content || '').join('\n').trim();
   if (transcript.length < 50) throw new Error('字幕不足50字，暂不检测。');
-  const response = await fetch(`${base}/api/jobs`, {
-    method:'POST', headers:{'Content-Type':'application/json',Authorization:authorization},
+  const response = await BiliLocal.request('/api/jobs', {
+    method:'POST', headers:{'Content-Type':'application/json'},
     body:JSON.stringify({videoId, transcript}), signal:AbortSignal.timeout(10000)
   });
   let job = await response.json();
@@ -75,7 +70,7 @@ async function biliAnalyze({bvid,p},progress=()=>{}) {
     if (!/^[A-Za-z0-9_-]{32}$/.test(job.jobId || '')) throw new Error('检测任务编号无效。');
     const jobId=job.jobId;
     await new Promise(resolve=>setTimeout(resolve,job.status==='queued'?1000:300));
-    const poll=await fetch(`${base}/api/jobs/${jobId}`,{headers:{Authorization:authorization},signal:AbortSignal.timeout(10000)});
+    const poll=await BiliLocal.request(`/api/jobs/${jobId}`);
     job={...(await poll.json()),jobId};
     if (!poll.ok) throw new Error(job.error || '任务查询失败。');
   }

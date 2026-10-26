@@ -144,7 +144,7 @@
       pending.splice(i,1);
       if(alive(record) && record.state==='queued'){
         record.state='idle';
-        label(record,'请连接检测服务','本地检测程序未启动或连接码失效；恢复后会自动继续');
+        label(record,'请连接检测服务','本地检测程序暂不可用；启动后会自动重新连接');
       }
     }
     if(state.resumeTimer)clearTimeout(state.resumeTimer);
@@ -223,8 +223,8 @@
 
   chrome.storage.local.get(['biliAutoDetect','biliLocalToken']).then(async settings=>{
     state.auto=settings?.biliAutoDetect!==false;
-    state.token=typeof settings?.biliLocalToken==='string'?settings.biliLocalToken:'';
-    if(state.token)await refreshConcurrency();
+    state.token='auto';
+    await refreshConcurrency();
     resumeVisible();
   }).catch(()=>{});
   if(typeof document.addEventListener==='function')document.addEventListener('visibilitychange',()=>{if(!document.hidden&&state.token)refreshConcurrency();});
@@ -238,7 +238,7 @@
       if(state.auto)resumeVisible();else cancelAuto();
     }
     if(changes.biliLocalToken){
-      state.token=typeof changes.biliLocalToken.newValue==='string'?changes.biliLocalToken.newValue:'';
+      state.token='auto';
       if(state.token){resumeVisible();refreshConcurrency().finally(resumeVisible);}
       else state.maxConcurrent=1;
     }

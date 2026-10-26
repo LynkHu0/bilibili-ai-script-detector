@@ -1,5 +1,13 @@
-runtime/
 node_modules/
 .local-data/
 *.log
-.DS_Store
+.env*
+accounts.json
+
+providers.json
+
+
+usage.json
+
+official-usage.json
+connection.json

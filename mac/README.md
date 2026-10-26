@@ -13,7 +13,7 @@
 
 ## 下载与相关项目
 
-- **安装包：** [下载最新版本](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest)，按处理器选择 `-mac-arm64.zip`（Apple 芯片）或 `-mac-x64.zip`（Intel），内置 Node.js，无需另行安装。当前发布版本为 **1.5.8**。
+- **安装包：** [下载最新版本](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest)，按处理器选择 `-mac-arm64.zip`（Apple 芯片）或 `-mac-x64.zip`（Intel），内置 Node.js，无需另行安装。当前发布版本为 **1.5.9**。
 - **问题反馈：** [GitHub Issues](https://github.com/LynkHu0/stop-the-slop-for-brower/issues)。反馈前请移除 Key、Cookie、连接码和账户信息。
 - **上游项目：** [Stop the Slop — YouTube AI Script Detector](https://github.com/MauroPello/stop-the-slop)。
 
@@ -60,7 +60,7 @@ B站检测使用 `local-server`，不需要部署 `worker`。不能用上游的 
 
 ### 1. 启动本地服务
 
-1. 安装 [Node.js](https://nodejs.org/) **22或更新版本**。
+1. 下载对应平台安装包；包内已包含 Node.js 和运行依赖，无需另外安装。
 2. [下载安装 ZIP](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest) 并完整解压。
 3. macOS 双击 `启动检测.command`。发布包内置 Node.js 和所需依赖，无需安装 Node.js 或 npm；保持窗口运行。若系统阻止打开，先核验源码与来源，再按自己的系统策略处理。
 4. 打开 `http://127.0.0.1:17653`，选择服务并配置自己的 ChatGPT 账户或 DeepSeek Key，保存后测试。测试也会消耗用量。
@@ -69,10 +69,10 @@ B站检测使用 `local-server`，不需要部署 `worker`。不能用上游的 
 
 1. Chrome 打开 `chrome://extensions`，Edge 打开 `edge://extensions`。
 2. 开启 **开发者模式**，点击 **加载已解压的扩展程序**，选择 `extension` 文件夹。
-3. 打开扩展的齿轮设置，粘贴本地设置页的 **本机连接码**，保存并连接。
+插件会自动连接本机检测程序，无需复制或填写连接码。你只需启动程序、加载浏览器扩展，并连接自己的 ChatGPT 或配置 DeepSeek Key。
 4. 阅读 [隐私说明](PRIVACY.md)，按需关闭自动检测，然后登录 B站并刷新页面。
 
-连接码会保存在本机，正常重启通常沿用；删除连接文件或更改连接码后需要重新配对。滚动浏览可能自动调用模型并产生用量；关闭开关不保证取消已经发出的请求。
+连接凭据由插件自动获取并保存在本机，重启或失效后自动重新连接。滚动浏览可能自动调用模型并产生用量；关闭开关不保证取消已经发出的请求。
 
 ---
 
@@ -121,3 +121,5 @@ node --test local-server/test.mjs local-server/*.test.mjs tests/*.test.cjs
 `package-release.py` 还需要 `--arch`、`--node-archive`、`--node-checksums`、`--output` 参数。Node 归档及 SHASUMS256.txt 从同一官方版本目录下载；脚本会校验 SHA256，仅提取对应架构的 Node 二进制和许可证，排除私人运行数据。
 
 1.5.8：视频卡片结果精简为百分比，无可用字幕时显示“无文案”；完整说明可悬停查看。
+
+1.5.9：插件自动连接本机服务，移除手动连接码输入和复制步骤，连接失效后自动重新连接。

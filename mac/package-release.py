@@ -51,7 +51,7 @@ with tempfile.TemporaryDirectory(prefix='slop-mac-package-') as tmp:
 1. 完整解压后双击“启动检测.command”，保持启动窗口运行。
 2. Chrome / Edge 扩展管理页开启开发人员模式，加载本包 extension 文件夹。
 3. 打开 http://127.0.0.1:17653/，配置自己的 ChatGPT 登录或 DeepSeek Key。
-4. 复制本机连接码到插件设置，刷新 B站页面。
+4. 插件自动连接本机服务，无需复制连接码；配置服务后登录 B站并刷新页面。
 本机资料：~/Library/Application Support/StopTheSlop（不可分享）。
 关闭启动窗口可停止服务。新旧版本不要同时运行，以免占用同一端口。
 如系统阻止启动，先核验下载来源，再按 macOS 的系统提示处理。

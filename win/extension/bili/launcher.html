@@ -181,9 +181,7 @@
       <h2>连接设置</h2>
       <p id="provider-status"></p>
       <button id="open" class="btn btn-retry">选择服务 / API设置</button>
-      <label for="token">本机连接码</label>
-      <input id="token" type="password" autocomplete="off" placeholder="粘贴本机连接码">
-      <button id="save" class="btn btn-retry">保存并连接</button>
+      <p class="settings-hint">插件会自动连接本机检测程序。启动程序后，选择 ChatGPT 或 DeepSeek 并配置即可。</p>
       <p id="connection-message" role="status"></p>
       <label class="switch-row" for="auto-detect">
         <input id="auto-detect" type="checkbox">
@@ -197,6 +195,7 @@
     </footer>
   </div>
 
+  <script src="local-service.js"></script>
   <script src="core.js"></script>
   <script src="usage-format.js"></script>
   <script src="launcher.js"></script>

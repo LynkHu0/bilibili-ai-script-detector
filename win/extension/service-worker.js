@@ -143,6 +143,6 @@ async function updateBadge(tabId, score) {
   await chrome.action.setBadgeBackgroundColor({ color: bgColor, tabId });
 }
 
-importScripts('bili/core.js', 'bili/background.js');
+importScripts('bili/local-service.js', 'bili/core.js', 'bili/background.js');
 
 importScripts('billing/background.js');

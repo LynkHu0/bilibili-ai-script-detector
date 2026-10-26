@@ -39,5 +39,5 @@ try {
     Start-Process explorer.exe -ArgumentList ('"' + (Join-Path $target 'extension') + '"')
     Write-Host '安装完成。Edge 打开 edge://extensions，开启开发人员模式，加载刚打开的 extension 文件夹。' -ForegroundColor Green
     Write-Host ('插件文件夹：' + (Join-Path $target 'extension'))
-    Write-Host '然后在网页设置页配置你自己的 ChatGPT 登录或 DeepSeek API Key，并复制本机连接码到插件。'
+    Write-Host '然后在网页设置页配置你自己的 ChatGPT 登录或 DeepSeek API Key，插件会自动连接本机服务。'
 } catch { Write-Host $_.Exception.Message -ForegroundColor Red; exit 1 }

@@ -44,7 +44,7 @@ function page(message=''){
  const common=[['gpt-6-luna','GPT-6 Luna'],['gpt-6-sol','GPT-6 Sol'],['gpt-6.1-sol','GPT-6.1 Sol'],['gpt-6-astra','GPT-6 Astra'],['gpt-5.6-luna','GPT-5.6 Luna'],['gpt-5.6-sol','GPT-5.6 Sol'],['gpt-5.6-terra','GPT-5.6 Terra']];
  const models=new Map([...catalog.models.map(m=>[m.slug,m.name]),...common]);if(!models.has(config.chatgptModel))models.set(config.chatgptModel,config.chatgptModel);
  const efforts=[['auto','自动（模型默认）'],['none','None'],['minimal','Minimal'],['low','Low'],['medium','Medium'],['high','High'],['xhigh','XHigh'],['max','Max'],['ultra','Ultra']];
- return `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>B站文案检测 · 服务设置</title><style>body{max-width:650px;margin:50px auto;padding:20px;font:16px/1.7 system-ui;background:#131722;color:#eee}button,input,select{padding:12px;border-radius:8px;border:1px solid #777;max-width:100%;box-sizing:border-box}button{cursor:pointer;background:#f5a6c3}input{width:100%}input[type=number]{width:8rem}input[type=checkbox]{width:auto;flex:0 0 auto;margin:0}small{color:#bdc3ce}section{padding:18px;background:#202636;margin:20px 0;border-radius:12px}a{color:#f5a6c3}.checkbox-row{display:flex;align-items:center;gap:10px}</style><script src="/usage-format.js" defer></script><script src="/settings.js" defer></script><h1>B站文案检测</h1><p>当前服务：${info.provider==='deepseek'?'DeepSeek API · '+esc(info.model)+' · '+(info.effort==='none'?'非思考模式':`思考模式 · ${esc(info.effort.toUpperCase())}`):'ChatGPT 套餐 · '+esc(config.chatgptModel)+' · '+esc(config.chatgptEffort)}</p><p>${esc(message)}</p><section id="provider"><h2>检测服务</h2><form method="post" action="/provider/save">
+ return `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="bili-local-token" content="${pairing}"><title>B站文案检测 · 服务设置</title><style>body{max-width:650px;margin:50px auto;padding:20px;font:16px/1.7 system-ui;background:#131722;color:#eee}button,input,select{padding:12px;border-radius:8px;border:1px solid #777;max-width:100%;box-sizing:border-box}button{cursor:pointer;background:#f5a6c3}input{width:100%}input[type=number]{width:8rem}input[type=checkbox]{width:auto;flex:0 0 auto;margin:0}small{color:#bdc3ce}section{padding:18px;background:#202636;margin:20px 0;border-radius:12px}a{color:#f5a6c3}.checkbox-row{display:flex;align-items:center;gap:10px}</style><script src="/usage-format.js" defer></script><script src="/settings.js" defer></script><h1>B站文案检测</h1><p>当前服务：${info.provider==='deepseek'?'DeepSeek API · '+esc(info.model)+' · '+(info.effort==='none'?'非思考模式':`思考模式 · ${esc(info.effort.toUpperCase())}`):'ChatGPT 套餐 · '+esc(config.chatgptModel)+' · '+esc(config.chatgptEffort)}</p><p>${esc(message)}</p><section id="provider"><h2>检测服务</h2><form method="post" action="/provider/save">
  <input type="hidden" name="csrf" value="${csrf}">
  <label>服务 <select name="provider"><option value="chatgpt" ${config.provider==='chatgpt'?'selected':''}>ChatGPT 套餐</option><option value="deepseek" ${config.provider==='deepseek'?'selected':''}>DeepSeek API</option></select></label>
  <p><label>自动检测并发任务数 <input type="number" name="maxConcurrent" min="1" max="100" step="1" value="${config.maxConcurrent}"></label></p><p><small>范围 1–100，默认 10。并发越高，同时发出的模型请求越多，可能更快，也更容易触发服务限流或增加短时间用量。</small></p>
@@ -64,7 +64,7 @@ function page(message=''){
  <form method="post" action="/auth/start"><input type="hidden" name="csrf" value="${csrf}"><button>Continue with ChatGPT${auth.data.accounts.length?' · 添加账户':''}</button></form>
  ${a?.access_token?`<form method="post" action="/logout"><input type="hidden" name="csrf" value="${csrf}"><button>退出当前账户</button></form>`:''}
  <small>会占用套餐额度。可在 <a href="https://chatgpt.com/settings/usage" rel="noreferrer">ChatGPT 使用量设置</a>管理额度与访问权限。模型无权限时会报错，不自动换模型或使用付费API密钥。</small></section>
- <section><h2>2. 连接浏览器插件</h2><p>把下面的本机连接码粘贴到插件设置中，点击“保存并连接”。连接码只用于访问本机程序，并非你的OpenAI登录凭据。重启程序后需重新粘贴。</p><input readonly aria-label="本机连接码" value="${pairing}"><small>请勿分享连接码。OAuth凭据保存在本机私有目录，不会交给插件。</small></section>
+ <section><h2>浏览器插件自动连接</h2><p>启动本机程序并加载扩展后，插件会自动连接，无需复制连接码。你只需在上方连接 ChatGPT，或选择 DeepSeek 并保存 API Key。</p></section>
  <section id="usage-panel"><h2>服务用量</h2><p id="usage-primary">读取用量中…</p><p id="usage-detail"></p><small id="usage-notice"></small><p><a id="usage-deepseek" href="https://platform.deepseek.com/usage" target="_blank" rel="noreferrer" hidden>打开DeepSeek官方账单并同步</a></p><p><a id="usage-official" href="https://chatgpt.com/settings/usage" target="_blank" rel="noreferrer">查看官方套餐用量</a></p><small>DeepSeek可同步官方页当前Key的账单汇总，保留所选时间范围。需更新扩展后在官方用量页点击同步；页面保持打开时自动更新。官方页可能有5分钟延迟。本机统计单独标注。</small></section>
  <section><h2>检查当前检测服务</h2><form method="post" action="/test"><input type="hidden" name="csrf" value="${csrf}"><button>测试当前服务</button></form><small>会使用一次很小的套餐请求。成功完成请求才表示该账户实际可用。</small></section>
  <p>检测只读取字幕文案；结果是风格判断。没有字幕的视频暂不支持。支持电脑Chrome和Edge，手机B站官方App暂不支持。</p></html>`;
@@ -91,9 +91,14 @@ const server=http.createServer(async(req,res)=>{
   if(url.pathname.startsWith('/api/')){
    const caller=req.headers.origin;
    if(caller && caller!==origin && !/^chrome-extension:\/\/[a-p]{32}$/.test(caller))return send(403,{error:'仅允许浏览器扩展连接。'});
-   if(caller){res.setHeader('Access-Control-Allow-Origin',caller);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Headers','Authorization, Content-Type');res.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS');res.setHeader('Access-Control-Allow-Private-Network','true');}
+   if(caller){res.setHeader('Access-Control-Allow-Origin',caller);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Headers','Authorization, Content-Type, X-BiliSlop-Client');res.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS');res.setHeader('Access-Control-Allow-Private-Network','true');}
    if(req.method==='OPTIONS'){res.writeHead(204);return res.end();}
-   if(!equal(req.headers.authorization,`Bearer ${pairing}`))return send(401,{error:'本机连接码无效，请打开本地设置页面重新复制。'});
+   if(url.pathname==='/api/pair'){
+    if(req.method!=='POST' || !/^chrome-extension:\/\/[a-p]{32}$/.test(caller || '') || req.headers['x-bilislop-client']!=='extension' || !/^application\/json(?:;|$)/i.test(req.headers['content-type'] || ''))return send(403,{error:'自动连接仅允许浏览器扩展发起。'});
+    await readBody(req);
+    return send(200,{token:pairing});
+   }
+   if(!equal(req.headers.authorization,`Bearer ${pairing}`))return send(401,{error:'插件连接已过期，将自动重新连接。',code:'PAIRING_REQUIRED'});
    if(url.pathname==='/api/status' && req.method==='GET')return send(200,publicStatus());
    if(url.pathname==='/api/official-usage' && req.method==='GET')return send(200,{snapshot:official.get(usageScope('deepseek'))});
    if(url.pathname==='/api/official-usage' && req.method==='POST'){const body=JSON.parse(await readBody(req));return send(200,{snapshot:await official.update(usageScope('deepseek'),body.snapshot,body.bind===true)});}
@@ -155,5 +160,5 @@ const server=http.createServer(async(req,res)=>{
  }
 });
 server.requestTimeout=210000;
-server.listen(port,'127.0.0.1',()=>{console.log(`本地检测程序已启动：${origin}\n当前服务：${providers.info().provider} / ${providers.info().model}。请打开页面设置并连接插件。`);});
+server.listen(port,'127.0.0.1',()=>{console.log(`本地检测程序已启动：${origin}\n当前服务：${providers.info().provider} / ${providers.info().model}。请打开页面配置检测服务，插件会自动连接。`);});
 server.on('error',e=>{console.error(e.code==='EADDRINUSE'?'本地检测程序已在运行，或端口17653被占用。':'本地程序无法启动：'+e.code);process.exitCode=1;});
