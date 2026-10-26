@@ -1,0 +1,17 @@
+/* Bilibili popup: reuse the original Stop the Slop dashboard. */
+#state-result { min-height: 226px; padding-top: 24px; }
+.footer { position: relative; }
+.settings-toggle { position:absolute; right:0; top:8px; border:0; padding:3px; color:var(--text-muted); background:transparent; font:15px system-ui; cursor:pointer; }
+.connection-settings { padding:14px; border:1px solid var(--border-subtle); border-radius:10px; background:var(--bg-card); }
+.connection-settings h2 { font-size:13px; margin-bottom:10px; }
+.connection-settings label { display:block; margin:12px 0 5px; font-size:12px; color:var(--text-secondary); }
+.connection-settings input { box-sizing:border-box; width:100%; border:1px solid var(--border-subtle); border-radius:6px; padding:9px; background:var(--bg-secondary); color:var(--text-primary); }
+.connection-settings .btn { margin-top:8px; }
+#connection-message { color:var(--text-secondary); font-size:12px; line-height:1.6; margin-top:8px; }
+.connection-settings .switch-row { display:flex; align-items:flex-start; gap:8px; margin:14px 0 0; padding-top:12px; border-top:1px solid var(--border-subtle); font-size:12px; line-height:1.5; color:var(--text-secondary); cursor:pointer; }
+.connection-settings .switch-row input { width:auto; margin:2px 0 0; padding:0; flex:none; accent-color:var(--accent, #f5a6c3); }
+.connection-settings .settings-hint { margin:5px 0 0; font-size:11px; line-height:1.55; color:var(--text-muted); }
+
+.usage-panel{padding:12px 0;border-top:1px solid var(--border-subtle);font-size:12px;line-height:1.6}.usage-panel p{margin:0 0 4px}.usage-panel #usage-primary{font-weight:600;color:var(--text-primary)}.usage-panel #usage-detail,.usage-panel #usage-notice{color:var(--text-muted);font-size:11px}.usage-panel a{color:var(--text-secondary);font-size:11px}
+
+.score-disclaimer{font-size:11px;line-height:1.5;color:var(--text-muted);margin:8px 0 12px;text-align:center}

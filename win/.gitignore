@@ -1,0 +1,13 @@
+node_modules/
+.local-data/
+*.log
+.env*
+accounts.json
+
+providers.json
+
+
+usage.json
+
+official-usage.json
+connection.json

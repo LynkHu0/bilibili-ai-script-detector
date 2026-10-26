@@ -1,0 +1,80 @@
+{
+  "manifest_version": 3,
+  "name": "Stop the Slop for Browser",
+  "description": "保留 YouTube 功能，B站字幕文案检测、本地封面标记，并自动检测可见视频卡片。",
+  "version": "1.5.7",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [
+    "tabs",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://stop-the-slop-api.maurobum43.workers.dev/*",
+    "https://*.bilibili.com/*",
+    "https://*.hdslb.com/*",
+    "http://127.0.0.1:17653/*",
+    "https://platform.deepseek.com/*"
+  ],
+  "action": {
+    "default_popup": "bili/launcher.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "content-main.js"
+      ],
+      "world": "MAIN",
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "world": "ISOLATED",
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.bilibili.com/*",
+        "https://space.bilibili.com/*",
+        "https://search.bilibili.com/*"
+      ],
+      "js": [
+        "bili/core.js",
+        "bili/content.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://platform.deepseek.com/usage*"
+      ],
+      "js": [
+        "billing/extract.js",
+        "billing/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "optional_host_permissions": []
+}
