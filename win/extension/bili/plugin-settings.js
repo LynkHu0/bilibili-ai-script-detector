@@ -47,5 +47,5 @@
   chrome.storage.local.get(key).then(d=>$(id).checked=d[key]!==false).catch(()=>{});
   $(id).addEventListener('change',()=>{chrome.storage.local.set({[key]:!!$(id).checked}).catch(e=>message(e.message,true));});
  }
- globalThis.PluginSettings={load};selectProvider();load();
+ globalThis.PluginSettings={load};selectProvider();
 })();

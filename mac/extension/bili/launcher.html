@@ -49,6 +49,7 @@
       </div>
       <p class="subtitle">AI Script Detector for Bilibili</p>
     </header>
+    <main id="detection-view">
 
 
     <!-- State: Not on YouTube -->
@@ -172,20 +173,28 @@
     </div>
 
     <p class="score-disclaimer">分数是模型估计，未经概率校准，不能证明创作来源。</p>
+    </main>
+    <section id="connection-settings" class="connection-settings hidden" aria-label="连接设置">
+      <h2>设置</h2>
+    <section id="usage-panel" class="usage-panel" aria-label="服务用量" aria-live="polite">
+      <p id="usage-primary">正在读取服务用量…</p><p id="usage-detail"></p><p id="usage-notice"></p>
+      <a id="usage-deepseek" href="https://platform.deepseek.com/usage" target="_blank" rel="noreferrer" hidden>同步DeepSeek官方账单</a>
+      <a id="usage-official" href="https://chatgpt.com/settings/usage" target="_blank" rel="noreferrer">查看官方套餐用量</a>
+    </section>
+      <label class="switch-row" for="show-percentage"><input id="show-percentage" type="checkbox" checked><span>显示封面百分比</span></label>
+      <label class="switch-row" for="show-glow"><input id="show-glow" type="checkbox" checked><span>显示封面颜色光晕</span></label>
+      <label class="switch-row" for="auto-detect">
+        <input id="auto-detect" type="checkbox">
+        <span>自动检测可见的视频卡片</span>
+      </label>
+
     <section id="service-controls" class="connection-settings" aria-label="检测服务开关">
       <h2>检测服务</h2>
       <p id="service-status" role="status" aria-live="polite">正在检查检测服务…</p>
       <button id="service-toggle" class="btn btn-retry" disabled>检查中…</button>
       <p id="service-hint" class="settings-hint"></p>
     </section>
-    <section id="usage-panel" class="usage-panel" aria-label="服务用量" aria-live="polite">
-      <p id="usage-primary">正在读取服务用量…</p><p id="usage-detail"></p><p id="usage-notice"></p>
-      <a id="usage-deepseek" href="https://platform.deepseek.com/usage" target="_blank" rel="noreferrer" hidden>同步DeepSeek官方账单</a>
-      <a id="usage-official" href="https://chatgpt.com/settings/usage" target="_blank" rel="noreferrer">查看官方套餐用量</a>
-    </section>
-    <section id="connection-settings" class="connection-settings hidden" aria-label="连接设置">
-      <h2>服务与显示设置</h2>
-      <button id="open" class="btn btn-retry" type="button">在独立标签页打开插件设置</button>
+      <h3 class="service-config-heading">服务配置</h3>
       <p id="provider-status"></p>
       <form id="provider-form">
         <label for="provider">检测服务</label>
@@ -213,17 +222,10 @@
       </div>
       <button id="refresh-config" class="btn btn-retry" type="button">刷新账户与设置</button>
       <p id="config-message" role="status" aria-live="polite"></p>
-      <label class="switch-row" for="show-percentage"><input id="show-percentage" type="checkbox" checked><span>显示封面百分比</span></label>
-      <label class="switch-row" for="show-glow"><input id="show-glow" type="checkbox" checked><span>显示封面颜色光晕</span></label>
-      <label class="switch-row" for="auto-detect">
-        <input id="auto-detect" type="checkbox">
-        <span>自动检测可见的视频卡片</span>
-      </label>
-      <p class="settings-hint">开启后，B站列表页、搜索页的视频卡片滚动到可视区域时会自动检测（按本地服务的并发设置处理，其余排队）。关闭后恢复为手动点击。每次自动检测都会调用你配置的服务并产生相应费用。</p>
     </section>
     <!-- Footer -->
     <footer class="footer">
-      <span>结果仅供参考</span><button id="settings-toggle" class="settings-toggle" aria-label="连接设置" title="连接设置">⚙</button>
+      <span>结果仅供参考</span><button id="settings-toggle" class="settings-toggle" aria-label="设置" title="设置">⚙</button>
     </footer>
   </div>
 

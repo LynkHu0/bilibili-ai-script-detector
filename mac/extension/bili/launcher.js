@@ -44,13 +44,20 @@ async function analyze(){
     document.querySelector('#state-loading .state-message').textContent=progress.status==='queued'?`排队中 · 前方 ${progress.queuePosition || 1} 个任务`:'正在检测文案…';
   });
   render(result);
- }catch(e){error(e.message);if(!connected)$('connection-settings').classList.remove('hidden');}
+ }catch(e){error(e.message);}
  finally{running=false;}
 }
 $('btn-retry').onclick=analyze;
 $('analyze').onclick=analyze;
-$('settings-toggle').onclick=()=>$('connection-settings').classList.toggle('hidden');
-$('open').onclick=()=>chrome.tabs.create({url:chrome.runtime.getURL('bili/launcher.html?settings=1')});
+function setSettingsView(open){
+ $('connection-settings').classList.toggle('hidden',!open);
+ $('detection-view').classList.toggle('hidden',open);
+ $('settings-toggle').textContent=open?'←':'⚙';
+ $('settings-toggle').setAttribute('aria-label',open?'返回检测':'设置');
+ $('settings-toggle').title=open?'返回检测':'设置';
+ if(open){globalThis.PluginSettings?.load();refreshService();refreshUsage();}
+}
+$('settings-toggle').onclick=()=>setSettingsView($('connection-settings').classList.contains('hidden'));
 // 自动检测开关：保存在本机，默认开启；内容脚本监听变化后立即生效，无需刷新B站页面。
 const autoDetect=$('auto-detect');
 async function initAutoDetectSetting(){
@@ -77,10 +84,9 @@ async function initialState(){
  [activeTab]=await chrome.tabs.query({active:true,currentWindow:true});
  if(activeTab?.url && new URL(activeTab.url).hostname==='www.youtube.com'){location.replace('../popup/popup.html');return;}
  const settings=await chrome.storage.local.get(['theme_preference']);
- if(typeof location.search==='string' && new URLSearchParams(location.search).get('settings')==='1'){document.body.classList.add('settings-page');$('connection-settings').classList.remove('hidden');}
  applyTheme(settings.theme_preference || localStorage.getItem('sts_theme') || 'system');
  await initialState();
-})().catch(e=>{error(e.message);$('connection-settings').classList.remove('hidden');});
+})().catch(e=>{error(e.message);});
 
 async function refreshUsage(){
  try{
@@ -88,7 +94,7 @@ async function refreshUsage(){
   if(!r.ok)throw new Error();BiliUsageView.render(await r.json());
  }catch{$('usage-primary').textContent='用量暂不可读取';}
 }
-refreshUsage();setInterval(refreshUsage,5000);
+setInterval(()=>{if(!document.hidden&&!$('connection-settings').classList.contains('hidden'))refreshUsage();},5000);
 
 // Native messaging can launch the local service even when its HTTP listener is stopped.
 let serviceState={running:false,installed:false},serviceAction=false,servicePoll=false,serviceError='';
@@ -109,7 +115,7 @@ $('service-toggle').onclick=async()=>{
   if(stopping)await chrome.storage.local.set({biliServiceStopped:true});
   const result=await BiliLocal.control(stopping?'stop':'start');
   if(result.occupied)throw new Error(result.message);
-  if(!stopping && result.running){await chrome.storage.local.set({biliServiceStopped:false});await globalThis.PluginSettings?.load();await initialState().catch(()=>{$('connection-settings').classList.remove('hidden');});refreshUsage();}
+  if(!stopping && result.running){await chrome.storage.local.set({biliServiceStopped:false});await globalThis.PluginSettings?.load();await initialState().catch(()=>{});refreshUsage();}
  }catch(e){serviceError=e.message;$('service-hint').textContent=e.message;}finally{serviceAction=false;await refreshService();}
 };
-refreshService();setInterval(()=>{if(!document.hidden)refreshService();},3000);
+setInterval(()=>{if(!document.hidden&&!$('connection-settings').classList.contains('hidden'))refreshService();},3000);

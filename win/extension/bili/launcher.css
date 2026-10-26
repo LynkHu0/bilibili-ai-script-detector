@@ -21,4 +21,9 @@
 .account-settings{margin-top:18px;padding-top:12px;border-top:1px solid var(--border-subtle)}.account-settings h3{font-size:13px}
 .account-row{padding:9px 0;border-bottom:1px solid var(--border-subtle);font-size:12px;overflow-wrap:anywhere}.account-row span{display:block;color:var(--text-secondary)}
 #config-message{margin-top:10px;font-size:12px;line-height:1.6;overflow-wrap:anywhere}
-body.settings-page{width:auto;max-width:760px;min-width:360px;margin:0 auto}body.settings-page .container{max-width:none}body.settings-page #state-not-youtube,body.settings-page #state-ready{display:none!important}body.settings-page #connection-settings{display:block!important}
+
+#connection-settings>.usage-panel{border-top:0;padding-top:0;margin-bottom:8px}
+#connection-settings>#service-controls{margin-top:16px;padding:14px 0;border-width:1px 0 0;border-radius:0;background:transparent}
+.service-config-heading{font-size:13px;margin:14px 0 8px;padding-top:14px;border-top:1px solid var(--border-subtle)}
+#connection-settings>.switch-row{margin-top:10px;padding-top:10px}
+#detection-view.hidden{display:none!important}
