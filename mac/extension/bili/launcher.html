@@ -172,6 +172,12 @@
     </div>
 
     <p class="score-disclaimer">分数是模型估计，未经概率校准，不能证明创作来源。</p>
+    <section id="service-controls" class="connection-settings" aria-label="检测服务开关">
+      <h2>检测服务</h2>
+      <p id="service-status" role="status" aria-live="polite">正在检查检测服务…</p>
+      <button id="service-toggle" class="btn btn-retry" disabled>检查中…</button>
+      <p id="service-hint" class="settings-hint"></p>
+    </section>
     <section id="usage-panel" class="usage-panel" aria-label="服务用量" aria-live="polite">
       <p id="usage-primary">正在读取服务用量…</p><p id="usage-detail"></p><p id="usage-notice"></p>
       <a id="usage-deepseek" href="https://platform.deepseek.com/usage" target="_blank" rel="noreferrer" hidden>同步DeepSeek官方账单</a>
@@ -181,7 +187,7 @@
       <h2>连接设置</h2>
       <p id="provider-status"></p>
       <button id="open" class="btn btn-retry">选择服务 / API设置</button>
-      <p class="settings-hint">插件会自动连接本机检测程序。启动程序后，选择 ChatGPT 或 DeepSeek 并配置即可。</p>
+      <p class="settings-hint">安装本机组件后，可直接使用上方按钮在后台启动或停止服务。服务运行时，选择 ChatGPT 或 DeepSeek 并配置即可。</p>
       <p id="connection-message" role="status"></p>
       <label class="switch-row" for="auto-detect">
         <input id="auto-detect" type="checkbox">

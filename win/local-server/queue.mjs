@@ -11,6 +11,7 @@ export class AnalysisQueue {
   for(const [id,j] of this.jobs){if(this.jobs.size<this.retain)break;if(['completed','failed'].includes(j.status)){this.jobs.delete(id);if(this.byKey.get(j.key)===id)this.byKey.delete(j.key);}}
   const id=randomBytes(24).toString('base64url');this.jobs.set(id,{key,account,run,status:'queued'});this.byKey.set(key,id);this.waiting.push(id);this.drain();return this.snapshot(id);
  }
+ cancelWaiting(){for(const id of this.waiting){const j=this.jobs.get(id);if(j){j.status='failed';j.error='检测服务正在停止，未开始的任务已取消。';delete j.run;}}this.waiting=[];}
  drain(){
   while(this.active.size<this.concurrency && this.waiting.length){
    const id=this.waiting.shift(),j=this.jobs.get(id);if(!j)continue;this.active.add(id);j.status='running';

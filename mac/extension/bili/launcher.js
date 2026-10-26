@@ -88,3 +88,27 @@ async function refreshUsage(){
  }catch{$('usage-primary').textContent='用量暂不可读取';}
 }
 refreshUsage();setInterval(refreshUsage,5000);
+
+// Native messaging can launch the local service even when its HTTP listener is stopped.
+let serviceState={running:false,installed:false},serviceAction=false,servicePoll=false,serviceError='';
+async function refreshService(){
+ if(serviceAction || servicePoll)return;servicePoll=true;
+ try{
+  serviceState=await BiliLocal.control('status');
+  $('service-status').textContent=serviceState.stopping?'正在停止检测服务':serviceState.occupied||serviceState.legacy?'旧版服务占用检测端口':serviceState.running?'正在运行检测服务':'没有运行检测服务';
+  $('service-toggle').textContent=serviceState.stopping?'正在停止…':serviceState.running?'停止检测服务':'启动检测服务';
+  $('service-toggle').disabled=!serviceState.installed || !!serviceState.stopping || !!serviceState.occupied;
+  $('service-hint').textContent=serviceError || (!serviceState.installed?'请先运行安装包中的“安装本机组件”，再加载安装程序打开的新版扩展。':serviceState.message || (serviceState.stopping?'正在等待已提交的模型请求完成；未开始的任务已取消。':'后台运行，无需保留终端窗口。'));
+ }catch(e){$('service-hint').textContent=e.message;}finally{servicePoll=false;}
+}
+$('service-toggle').onclick=async()=>{
+ if(serviceAction)return;serviceAction=true;serviceError='';$('service-toggle').disabled=true;
+ const stopping=serviceState.running;
+ try{
+  if(stopping)await chrome.storage.local.set({biliServiceStopped:true});
+  const result=await BiliLocal.control(stopping?'stop':'start');
+  if(result.occupied)throw new Error(result.message);
+  if(!stopping && result.running){await chrome.storage.local.set({biliServiceStopped:false});await initialState();refreshUsage();}
+ }catch(e){serviceError=e.message;$('service-hint').textContent=e.message;}finally{serviceAction=false;await refreshService();}
+};
+refreshService();setInterval(()=>{if(!document.hidden)refreshService();},3000);

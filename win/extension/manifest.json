@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Stop the Slop for Browser",
   "description": "保留 YouTube 功能，B站字幕文案检测、本地封面标记，并自动检测可见视频卡片。",
-  "version": "1.5.10",
+  "version": "1.5.11",
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",
@@ -11,7 +11,8 @@
   "permissions": [
     "tabs",
     "storage",
-    "scripting"
+    "scripting",
+    "nativeMessaging"
   ],
   "host_permissions": [
     "https://www.youtube.com/*",
@@ -76,5 +77,6 @@
   "background": {
     "service_worker": "service-worker.js"
   },
-  "optional_host_permissions": []
+  "optional_host_permissions": [],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp5LePc4IhDJ1CK2pu8j9XXDe1RZqyTGrJkTVsJwa3k4v76vkUy4pOECuBO4R5QkxRuoVXO38dm5OHMgMjAloPEvHQbc4bNLAKRFCrVCkRkLj6L0pNo/rzmPyqzu/ljQltY5jIAQnp7v9NNLcwZsY0SDDXP0xj5RoSLke1Xqh5qW6us91MLXlTxIpjTvmvcXzr8+BobgC7TgitZk9fngAIZ+d5BjVljD6yhY48S5lz8WKn9O1wAy4vXYjMOSCuxyKSsucwDKYJK/fNawf48z8Ty1yWJTeDfE8GcvMXqXeCyYBGBVeuCvwoDvC85ZPiapmZrYxTuxIrwiLYZMyWHkgPQIDAQAB"
 }

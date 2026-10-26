@@ -8,7 +8,7 @@
   const cards = new WeakMap();
   const live = new Set();
   const pending = [];
-  const state = {auto:true, token:'', active:0, maxConcurrent:1, pausedUntil:0, resumeTimer:null};
+  const state = {auto:true, userStopped:false, token:'', active:0, maxConcurrent:1, pausedUntil:0, resumeTimer:null};
 
   const style=document.createElement('style');
   style.textContent='.bili-slop-check{position:absolute;top:5px;left:5px;z-index:12;border:0;border-radius:5px;padding:5px 7px;background:#242737eb;color:white;font:12px system-ui;cursor:pointer}.bili-slop-check:disabled{opacity:.72;cursor:default}';
@@ -32,12 +32,12 @@
     if(error.code==='NO_SUBTITLES')return '无文案';
     if(/队列已满/.test(error.message))return '队列已满 · 稍后再试';
     if(/字幕不足/.test(error.message))return '字幕太短 · 无法检测';
-    if(/连接码|登录ChatGPT|本地检测程序|本地程序/.test(error.message))return '请连接检测服务';
+    if(/检测服务正在停止|连接码|登录ChatGPT|本地检测程序|本地程序/.test(error.message))return '请连接检测服务';
     if(/context invalidated|Receiving end does not exist|message port closed/i.test(error.message))return '请刷新此页面';
     return '检测失败 · 重试';
   }
   function serviceDown(error){
-    return /连接码|登录ChatGPT|本地检测程序|本地程序|请在本地设置|请先打开本地/.test(error.message || '');
+    return /检测服务正在停止|连接码|登录ChatGPT|本地检测程序|本地程序|请在本地设置|请先打开本地/.test(error.message || '');
   }
   function transient(error){
     return /队列已满|请求失败|超时|任务查询失败|检测未完成|Failed to fetch|NetworkError/.test(error.message || '');
@@ -58,7 +58,7 @@
 
   function scheduleAuto(record){
     if(!alive(record) || record.state!=='idle')return;
-    if(!state.auto || !state.token || !record.visible || Date.now()<state.pausedUntil)return;
+    if(state.userStopped || !state.auto || !state.token || !record.visible || Date.now()<state.pausedUntil)return;
     clearTimer(record);
     record.timer=setTimeout(()=>{
       record.timer=null;
@@ -79,7 +79,7 @@
 
   function enqueue(record,manual){
     if(!alive(record) || record.state!=='idle')return;
-    if(!manual && (!state.auto || !state.token || Date.now()<state.pausedUntil))return;
+    if(!manual && (state.userStopped || !state.auto || !state.token || Date.now()<state.pausedUntil))return;
     record.manual=manual;
     record.state='queued';
     if(manual)pending.unshift(record);else pending.push(record);
@@ -221,8 +221,8 @@
     });
   }
 
-  chrome.storage.local.get(['biliAutoDetect','biliLocalToken']).then(async settings=>{
-    state.auto=settings?.biliAutoDetect!==false;
+  chrome.storage.local.get(['biliAutoDetect','biliLocalToken','biliServiceStopped']).then(async settings=>{
+    state.auto=settings?.biliAutoDetect!==false;state.userStopped=settings?.biliServiceStopped===true;
     state.token='auto';
     await refreshConcurrency();
     resumeVisible();
@@ -233,6 +233,7 @@
   new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(scan,250);}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['href']});
   chrome.storage.onChanged.addListener((changes,area)=>{
     if(area!=='local')return;
+    if(changes.biliServiceStopped){state.userStopped=changes.biliServiceStopped.newValue===true;if(state.userStopped)cancelAuto();else{state.pausedUntil=0;if(state.resumeTimer){clearTimeout(state.resumeTimer);state.resumeTimer=null;}refreshConcurrency().finally(resumeVisible);resumeVisible();}}
     if(changes.biliAutoDetect){
       state.auto=changes.biliAutoDetect.newValue!==false;
       if(state.auto)resumeVisible();else cancelAuto();

@@ -15,6 +15,7 @@ const root=path.dirname(fileURLToPath(import.meta.url));
 const dir=process.env.BILI_SLOP_DATA_DIR || path.resolve(root,'../../.local-data');
 const port=Number(process.env.BILI_SLOP_PORT || 17653);
 const origin=`http://127.0.0.1:${port}`;
+const appVersion=(await readFile(path.join(root,'../VERSION'),'utf8')).trim();
 const auth=new Auth(dir,origin);await auth.init();
 const providers=new Providers(dir);await providers.init();
 const catalog=new ModelCatalog();
@@ -26,7 +27,7 @@ const pairing=validConnection(process.env.BILI_SLOP_CONNECTION_CODE)?process.env
 delete process.env.BILI_SLOP_CONNECTION_CODE;
 await savePrivate(path.join(dir,'connection.json'),{code:pairing});
 const csrf=randomBytes(32).toString('base64url');
-const cache=new Map();const queue=new AnalysisQueue({limit:100,concurrency:providers.config.maxConcurrent});let busy=false;
+const cache=new Map();const queue=new AnalysisQueue({limit:100,concurrency:providers.config.maxConcurrent});let busy=false;let stopping=false;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function equal(a,b){const aa=Buffer.from(a || ''),bb=Buffer.from(b);return aa.length===bb.length && timingSafeEqual(aa,bb);}
 function chatgptIdentity(){const a=auth.active();return a?.access_token?createHash('sha256').update(a.client_id+':'+a.subject).digest('hex').slice(0,24):null;}
@@ -88,6 +89,7 @@ const server=http.createServer(async(req,res)=>{
  try{
   if(req.headers.host!==`127.0.0.1:${port}`)return send(403,{error:'不允许的主机地址。'});
   const url=new URL(req.url,origin);
+  if(url.pathname==='/health' && req.method==='GET')return send(200,{app:'stop-the-slop-local',version:appVersion,stopping});
   if(url.pathname.startsWith('/api/')){
    const caller=req.headers.origin;
    if(caller && caller!==origin && !/^chrome-extension:\/\/[a-p]{32}$/.test(caller))return send(403,{error:'仅允许浏览器扩展连接。'});
@@ -99,6 +101,10 @@ const server=http.createServer(async(req,res)=>{
     return send(200,{token:pairing});
    }
    if(!equal(req.headers.authorization,`Bearer ${pairing}`))return send(401,{error:'插件连接已过期，将自动重新连接。',code:'PAIRING_REQUIRED'});
+   if(url.pathname==='/api/control/stop' && req.method==='POST'){
+    if(!stopping){stopping=true;queue.cancelWaiting();const timer=setInterval(()=>{if(queue.busy || busy)return;clearInterval(timer);server.close(()=>process.exit(0));server.closeIdleConnections();},250);}
+    return send(202,{running:true,stopping:true});
+   }
    if(url.pathname==='/api/status' && req.method==='GET')return send(200,publicStatus());
    if(url.pathname==='/api/official-usage' && req.method==='GET')return send(200,{snapshot:official.get(usageScope('deepseek'))});
    if(url.pathname==='/api/official-usage' && req.method==='POST'){const body=JSON.parse(await readBody(req));return send(200,{snapshot:await official.update(usageScope('deepseek'),body.snapshot,body.bind===true)});}
@@ -108,6 +114,7 @@ const server=http.createServer(async(req,res)=>{
     if(!job || job.account!==identity())return send(404,{error:'未找到该账户的检测任务。'});
     const {account,...status}=job;return send(200,status);
    }
+   if(stopping)return send(503,{error:'检测服务正在停止，请在插件中重新启动后检测。'});
    if(url.pathname!=='/api/jobs' || req.method!=='POST')return send(404,{error:'接口不存在。'});
    if(!identity())return send(401,{error:providers.config.provider==='deepseek'?'请先在本地设置页面填写DeepSeek API Key。':'请先在本地设置页面登录ChatGPT。'});
    if(busy)return send(429,{error:'模型连接测试正在进行，请稍后重试。'});

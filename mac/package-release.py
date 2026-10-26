@@ -7,6 +7,9 @@ a.output.mkdir(parents=True,exist_ok=True);archive=a.output/(name+'.zip');assert
 with tempfile.TemporaryDirectory(prefix='slop-light-package-') as temp:
  target=Path(temp)/name;target.mkdir();(target/'local-server').mkdir()
  shutil.copytree(src/'extension',target/'extension',ignore=shutil.ignore_patterns('.DS_Store','*.log'))
+ shutil.copytree(src/'native',target/'native',ignore=shutil.ignore_patterns('controller-config.json','*.log'))
+ installer='安装本机组件.command' if a.platform=='mac' else '安装本机组件.bat'
+ shutil.copy2(src/installer,target/installer)
  shutil.copy2(a.server_bundle,target/'local-server/server.mjs');shutil.copy2(src/'local-server/settings-ui.js',target/'local-server/settings-ui.js')
  start='启动检测.command' if a.platform=='mac' else '启动检测-Windows.bat'
  for f in [start,'PRIVACY.md','UPSTREAM.md','VERSION','使用说明.md','JOSE-LICENSE.md']:shutil.copy2(src/f,target/f)

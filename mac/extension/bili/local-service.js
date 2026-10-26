@@ -29,5 +29,14 @@ globalThis.BiliLocal = (() => {
     }
     return response;
   }
-  return {request};
+  async function control(action){
+    if(!['status','start','stop'].includes(action))throw new Error('不支持的服务操作。');
+    try{const result=await chrome.runtime.sendNativeMessage('com.stoptheslop.bilibili',{action});if(!result?.ok)throw new Error(result?.error || '本机控制组件返回无效响应。');return {...result,installed:true};}
+    catch(error){
+      if(action!=='status')throw new Error('无法控制本机服务：'+error.message+'。请先运行安装本机组件，并重新加载新版扩展。');
+      try{const r=await fetch(base+'/health',{signal:AbortSignal.timeout(1200)});const d=await r.json();if(r.ok&&d.app==='stop-the-slop-local')return {running:true,stopping:!!d.stopping,installed:false};if(r.status===404)return {running:true,legacy:true,installed:false};}catch{}
+      return {running:false,installed:false};
+    }
+  }
+  return {request,control};
 })();
