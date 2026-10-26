@@ -13,7 +13,7 @@
 
 ## 下载与相关项目
 
-- **安装包：** [下载最新版本](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest)，解压后加载扩展。当前发布版本为 **1.5.7**。
+- **安装包：** [下载最新版本](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest)，按处理器选择 `-mac-arm64.zip`（Apple 芯片）或 `-mac-x64.zip`（Intel），内置 Node.js，无需另行安装。当前发布版本为 **1.5.7**。
 - **问题反馈：** [GitHub Issues](https://github.com/LynkHu0/stop-the-slop-for-brower/issues)。反馈前请移除 Key、Cookie、连接码和账户信息。
 - **上游项目：** [Stop the Slop — YouTube AI Script Detector](https://github.com/MauroPello/stop-the-slop)。
 
@@ -62,7 +62,7 @@ B站检测使用 `local-server`，不需要部署 `worker`。不能用上游的 
 
 1. 安装 [Node.js](https://nodejs.org/) **22或更新版本**。
 2. [下载安装 ZIP](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest) 并完整解压。
-3. macOS 双击 `启动检测.command`。首次运行会从 npm 安装依赖，保持窗口运行。若系统阻止打开，先核验源码与来源，再按自己的系统策略处理。
+3. macOS 双击 `启动检测.command`。发布包内置 Node.js 和所需依赖，无需安装 Node.js 或 npm；保持窗口运行。若系统阻止打开，先核验源码与来源，再按自己的系统策略处理。
 4. 打开 `http://127.0.0.1:17653`，选择服务并配置自己的 ChatGPT 账户或 DeepSeek Key，保存后测试。测试也会消耗用量。
 
 ### 2. 加载 Chrome / Edge 扩展
@@ -113,3 +113,9 @@ node --test local-server/test.mjs local-server/*.test.mjs tests/*.test.cjs
 感谢 **MauroPello** 的 [Stop the Slop](https://github.com/MauroPello/stop-the-slop)。本适配参考 commit `dec988b03ff63224aa6d6c796b5963eb3ccac95e`。
 
 上游 README 声明 MIT，但当前尚未补齐所需的完整许可文件及版权声明。本仓库没有将“已公开源码”等同于已完善开源授权，也未擅自添加 MIT 标识。复用与再分发前请查看 **[UPSTREAM.md](UPSTREAM.md)** 中的待确认事项。
+
+## macOS 发布打包
+
+发布包内置 Node.js，分为 arm64 和 x64。开发源码通过 `npm ci --prefix local-server` 安装依赖后，可使用 esbuild 将 `local-server/server.mjs` 打包为 ESM（platform=node、target=node22）；将该文件传给 `package-release.py --server-bundle`。
+
+`package-release.py` 还需要 `--arch`、`--node-archive`、`--node-checksums`、`--output` 参数。Node 归档及 SHASUMS256.txt 从同一官方版本目录下载；脚本会校验 SHA256，仅提取对应架构的 Node 二进制和许可证，排除私人运行数据。

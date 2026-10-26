@@ -4,7 +4,8 @@ B站字幕文案检测浏览器插件，使用自己的 ChatGPT 登录或 DeepSe
 
 | 平台 | 源码 | Release 附件 | 使用方式 |
 | --- | --- | --- | --- |
-| macOS | [mac/](mac/) | `stop-the-slop-for-brower-1.5.7-mac.zip` | 安装 Node.js 22+，解压后打开 `启动检测.command` |
+| macOS · Apple 芯片 | [mac/](mac/) | `stop-the-slop-for-brower-1.5.7-mac-arm64.zip` | 内置 Node.js，解压后打开 `启动检测.command` |
+| macOS · Intel | [mac/](mac/) | `stop-the-slop-for-brower-1.5.7-mac-x64.zip` | 内置 Node.js，解压后打开 `启动检测.command` |
 | Windows x64 | [win/](win/) | `stop-the-slop-for-brower-1.5.7-win.zip` | 内置 Node.js，解压后运行 `Install.cmd` |
 
 [下载最新版本](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest)。两个平台独立维护源码、启动方式与说明。
