@@ -235,7 +235,7 @@
       chrome.storage.local.get([key,'biliProviderIdentity']).then(stored=>{
         if(!alive(record))return;
         const cached=stored?.[key];
-        if(cached && cached.promptVersion===BiliSlop.PROMPT_VERSION && (!stored.biliProviderIdentity || cached.cacheIdentity===stored.biliProviderIdentity) && BiliSlop.validScore(cached.score)){
+        if(cached && cached.promptVersion===BiliSlop.PROMPT_VERSION && (cached.cacheIdentity && cached.cacheIdentity===stored.biliProviderIdentity) && BiliSlop.validScore(cached.score)){
           record.state='done';
           paint(button,cached);
         }
@@ -281,7 +281,7 @@
       if(!alive(record))continue;
       const video=BiliSlop.parse(record.anchor.href);
       const updated=video && changes[`bili_card_plan_${video.bvid}_${video.p}`]?.newValue;
-      if(updated && updated.promptVersion===BiliSlop.PROMPT_VERSION && BiliSlop.validScore(updated.score)){record.state='done';paint(record.button,updated);}
+      if(updated && updated.promptVersion===BiliSlop.PROMPT_VERSION && BiliSlop.validScore(updated.score)){chrome.storage.local.get('biliProviderIdentity').then(current=>{if(alive(record)&&updated.cacheIdentity&&updated.cacheIdentity===current.biliProviderIdentity){record.state='done';paint(record.button,updated);}}).catch(()=>{});}
     }
   });
   scan();

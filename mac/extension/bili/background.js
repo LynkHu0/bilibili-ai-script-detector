@@ -16,6 +16,7 @@ chrome.runtime.onMessage.addListener((m,sender,reply)=>{
    const response=await BiliLocal.request('/api/status');
    if(!response.ok)return {maxConcurrent:1};
    const status=await response.json();
+   await chrome.storage.local.set({biliProviderIdentity:status.cacheIdentity || ''});
    return {maxConcurrent:status.connected&&Number.isInteger(status.maxConcurrent)&&status.maxConcurrent>=1&&status.maxConcurrent<=100?status.maxConcurrent:1};
   })().then(reply,()=>reply({maxConcurrent:1}));
   return true;

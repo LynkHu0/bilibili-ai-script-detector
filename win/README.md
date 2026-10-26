@@ -1,4 +1,4 @@
-# Stop the Slop for Browser 1.5.12 · win 版
+# Stop the Slop for Browser 1.5.13 · win 版
 
 所有检测服务设置集成在浏览器插件中，日常不再使用本地 WebUI。服务后台运行；安装包仍为轻量包，不内置 Node.js。
 

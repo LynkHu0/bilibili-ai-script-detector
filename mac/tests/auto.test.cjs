@@ -56,7 +56,7 @@ function fixture({hrefs=[url],store={biliLocalToken:'t'.repeat(43)},analyze,maxC
    observer.fn([{target,isIntersecting:visible}]);
   },
   refresh(){mutation();runTimers(250);},
-  change(values){const changes={};for(const [k,v] of Object.entries(values))changes[k]={newValue:v};for(const fn of listeners)fn(changes,'local');},
+  change(values){Object.assign(storeData,values);const changes={};for(const [k,v] of Object.entries(values))changes[k]={newValue:v};for(const fn of listeners)fn(changes,'local');},
   runTimers,
  };
 }
@@ -188,3 +188,6 @@ test('percentage and cover glow can be toggled independently without new analysi
  f.change({biliShowPercentage:true});assert.equal(f.anchors[0].button.hidden,false);assert.equal(f.anchors[0].attrs['data-bili-slop-glow'],undefined);
  f.change({biliShowGlow:true});assert.equal(f.anchors[0].attrs['data-bili-slop-glow'],'orange');assert.equal(f.calls.length,0);
 });
+
+test('cached results are hidden when there is no current account identity',async()=>{const key='bili_card_plan_BV1xx411c7mD_1';const f=fixture({store:{biliAutoDetect:false,[key]:{score:.9,promptVersion:'zh-score-v4',cacheIdentity:'old-account'}}});await tick();assert.equal(f.anchors[0].attrs['data-bili-slop-glow'],undefined);assert.equal(f.anchors[0].button.textContent,'检测文案');assert.equal(f.calls.length,0);});
+test('late results from a previous account cannot repaint the current card',async()=>{const key='bili_card_plan_BV1xx411c7mD_1';const f=fixture({store:{biliAutoDetect:false,biliProviderIdentity:'old-account',[key]:{score:.9,promptVersion:'zh-score-v4',cacheIdentity:'old-account'}}});await tick();assert.equal(f.anchors[0].attrs['data-bili-slop-glow'],'red');f.change({biliProviderIdentity:'new-account'});await tick();assert.equal(f.anchors[0].attrs['data-bili-slop-glow'],undefined);f.change({[key]:{score:.9,promptVersion:'zh-score-v4',cacheIdentity:'old-account'}});await tick();assert.equal(f.anchors[0].attrs['data-bili-slop-glow'],undefined);assert.equal(f.calls.length,0);});

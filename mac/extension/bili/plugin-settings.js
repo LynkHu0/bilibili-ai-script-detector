@@ -23,7 +23,7 @@
   }
   $('account-empty').hidden=!!data.accounts?.length;
   $('logout-account').hidden=!data.accounts?.some(a=>a.active&&a.loggedIn);
-  const s=data.status || {};$('provider-status').textContent=s.provider==='deepseek'?`DeepSeek API · ${s.model} · ${s.effort==='none'?'非思考':s.effort}`:`ChatGPT 套餐 · ${s.model || c.chatgptModel} / ${s.effort || c.chatgptEffort}`;
+  const s=data.status || {};if(Object.prototype.hasOwnProperty.call(s,'cacheIdentity'))chrome.storage.local.set({biliProviderIdentity:s.cacheIdentity || ''}).catch(()=>{});$('provider-status').textContent=s.provider==='deepseek'?`DeepSeek API · ${s.model} · ${s.effort==='none'?'非思考':s.effort}`:`ChatGPT 套餐 · ${s.model || c.chatgptModel} / ${s.effort || c.chatgptEffort}`;
   selectProvider();$('save-config').disabled=false;
  }
  async function syncIdentity(){try{const r=await BiliLocal.request('/api/status');if(r.ok){const d=await r.json();await chrome.storage.local.set({biliProviderIdentity:d.cacheIdentity || ''});}}catch{}}
