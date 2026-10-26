@@ -1,4 +1,5 @@
 import http from 'node:http';
+import {EXTENSION_ID} from '../native/identity.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp,mkdir,rm,stat,readFile} from 'node:fs/promises';
@@ -38,29 +39,31 @@ test('OAuth state/nonce/scope/identity validation and protected storage',async()
   assert.equal((await stat(path.join(dir,'accounts.json'))).mode&0o777,0o600);
  }finally{await rm(dir,{recursive:true,force:true});}
 });
-test('loopback service rejects missing connection code, hostile Origin, invalid CSRF and host',async()=>{
+test('plugin settings stay authenticated and never expose saved credentials',async()=>{
  const dir=await mkdtemp(path.join(work,'slop-server-test-'));const port=18654;
  const child=spawn(process.execPath,[path.join(root,'server.mjs')],{env:{...process.env,BILI_SLOP_PORT:String(port),BILI_SLOP_DATA_DIR:dir},stdio:['ignore','pipe','pipe']});
  try{
   await new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(new Error('startup timeout')),10000);child.stdout.once('data',()=>{clearTimeout(t);resolve();});child.once('exit',()=>{clearTimeout(t);reject(new Error('server exited'));});});
-  const base='http://127.0.0.1:'+port;
-  assert.equal((await fetch(base+'/api/status')).status,401);
-  const landing=await fetch(base);assert.equal(landing.headers.get('referrer-policy'),'same-origin');assert.match(landing.headers.get('content-security-policy'),/connect-src 'self'/);assert.match(landing.headers.get('content-security-policy'),/form-action 'self' https:\/\/auth.openai.com;/);const html=await landing.text();const code=html.match(/aria-label="本机连接码" value="([^"]+)"/)[1];
-  const headers={Authorization:'Bearer '+code};const status=await(await fetch(base+'/api/status',{headers})).json();assert.equal(status.connected,false);assert.equal(status.model,'gpt-6-luna');
-  assert.equal((await fetch(base+'/api/usage')).status,401);const accounting=await(await fetch(base+'/api/usage',{headers})).json();assert.equal(accounting.provider,'chatgpt');assert.equal(accounting.planPercent,null);assert.equal(accounting.today.requests,0);
-  assert.equal((await fetch(base+'/api/status',{headers:{...headers,Origin:'https://evil.example'}})).status,403);
-  const hostile=await new Promise((resolve,reject)=>{http.get(base+'/api/status',{headers:{...headers,Host:'evil.example'}},r=>{r.resume();resolve(r.statusCode);}).on('error',reject);});assert.equal(hostile,403);
-  assert.equal((await fetch(base+'/auth/start',{method:'POST',headers:{Origin:base},body:'csrf=wrong'})).status,403);
-  const csrf=html.match(/name="csrf" value="([^"]+)"/)[1];
-  assert.equal((await fetch(base+'/auth/start',{method:'POST',headers:{Origin:'https://evil.example'},body:new URLSearchParams({csrf})})).status,403);
-  assert.equal((await fetch(base+'/auth/start',{method:'POST',headers:{Origin:'null'},body:new URLSearchParams({csrf})})).status,403);
-  assert.equal((await fetch(base+'/api/jobs',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:'{}'})).status,401);
-  const save=await fetch(base+'/provider/save',{method:'POST',headers:{Origin:base},body:new URLSearchParams({csrf,provider:'deepseek',model:'deepseek-flash',thinking:'disabled',apiKey:'test-only-secret-1234'})});
-  assert.equal(save.status,200);assert.equal((await save.text()).includes('test-only-secret-1234'),false);
-  const ds=await(await fetch(base+'/api/status',{headers})).json();assert.equal(ds.provider,'deepseek');assert.equal(ds.model,'deepseek-flash');assert.equal(ds.effort,'none');assert.equal(ds.connected,true);assert.equal(JSON.stringify(ds).includes('test-only-secret'),false);
-  const back=await fetch(base+'/provider/save',{method:'POST',headers:{Origin:base},body:new URLSearchParams({csrf,provider:'chatgpt'})});assert.equal(back.status,200);
-  const original=await(await fetch(base+'/api/status',{headers})).json();assert.equal(original.provider,'chatgpt');assert.equal(original.model,'gpt-6-luna');
-
+  const base='http://127.0.0.1:'+port,extensionOrigin='chrome-extension://'+EXTENSION_ID;
+  assert.equal((await fetch(base+'/api/settings')).status,401);
+  assert.equal((await fetch(base+'/api/pair',{method:'POST',headers:{Origin:'https://evil.example','Content-Type':'application/json','X-BiliSlop-Client':'extension'},body:'{}'})).status,403);
+  const pair=await fetch(base+'/api/pair',{method:'POST',headers:{Origin:extensionOrigin,'Content-Type':'application/json','X-BiliSlop-Client':'extension'},body:'{}'});assert.equal(pair.status,200);const code=(await pair.json()).token;
+  const headers={Authorization:'Bearer '+code,Origin:extensionOrigin,'Content-Type':'application/json'};
+  const landing=await fetch(base);const html=await landing.text();assert.match(html,/设置已迁移到浏览器插件/);assert.doesNotMatch(html,/本机连接码|检查当前检测服务|浏览器插件自动连接|type="password"/);
+  const status=await(await fetch(base+'/api/status',{headers})).json();assert.equal(status.connected,false);
+  assert.equal((await fetch(base+'/api/settings',{headers:{...headers,Origin:'https://evil.example'}})).status,403);
+  const hostile=await new Promise((resolve,reject)=>{http.get(base+'/api/settings',{headers:{...headers,Host:'evil.example'}},r=>{r.resume();resolve(r.statusCode);}).on('error',reject);});assert.equal(hostile,403);
+  const initial=await(await fetch(base+'/api/settings',{headers})).json();assert.equal(initial.config.chatgptModel,'gpt-6-luna');assert.equal(initial.config.apiKeySet,false);assert.deepEqual(initial.accounts,[]);
+  const secret='test-only-secret-1234';
+  const save=await fetch(base+'/api/settings',{method:'POST',headers,body:JSON.stringify({provider:'deepseek',model:'deepseek-flash',thinking:'disabled',apiKey:secret,maxConcurrent:7})});assert.equal(save.status,200);const text=await save.text();assert.equal(text.includes(secret),false);assert.equal(JSON.parse(text).config.apiKeySet,true);assert.equal(JSON.parse(text).status.maxConcurrent,7);
+  const again=await(await fetch(base+'/api/settings',{headers})).text();assert.equal(again.includes(secret),false);
+  const invalid=await fetch(base+'/api/settings',{method:'POST',headers,body:JSON.stringify({provider:'deepseek',maxConcurrent:101})});assert.equal(invalid.status,400);
+  const back=await fetch(base+'/api/settings',{method:'POST',headers,body:JSON.stringify({provider:'chatgpt',clearKey:'yes',chatgptModel:'gpt-6-sol',chatgptEffort:'low'})});assert.equal(back.status,200);const config=await back.json();assert.equal(config.config.apiKeySet,false);assert.equal(config.config.chatgptModel,'gpt-6-sol');assert.equal(config.config.chatgptEffort,'low');
+  const launch=await(await fetch(base+'/api/auth/start',{method:'POST',headers,body:'{}'})).json();const loginUrl=new URL(launch.launchUrl);assert.equal(loginUrl.origin,base);assert.equal(loginUrl.pathname,'/auth/launch');assert.ok(loginUrl.searchParams.get('ticket'));assert.equal(JSON.stringify(launch).includes('access_token'),false);
+  assert.equal((await fetch(base+'/auth/launch?ticket=bad')).status,400);
+  assert.equal((await fetch(base+'/api/accounts/switch',{method:'POST',headers,body:JSON.stringify({account:'unknown'})})).status,400);
+  assert.equal((await fetch(base+'/api/auth/logout',{method:'POST',headers,body:'{}'})).status,200);
+  assert.equal((await fetch(base+'/test',{method:'POST'})).status,404);
  }finally{child.kill();await new Promise(r=>child.once('exit',r));await rm(dir,{recursive:true,force:true});}
 });
 

@@ -30,7 +30,7 @@ async function connection(){
  try{response=await BiliLocal.request('/api/status');}
  catch{throw new Error('请先启动本地检测程序。');}
  const data=await response.json();if(!response.ok)throw new Error(data.error || '本机连接失败。');
- if(!data.connected)throw new Error(data.provider==='deepseek'?'请在本地设置中填写DeepSeek API Key。':'请先打开本地登录页面，连接ChatGPT。');
+ if(!data.connected)throw new Error(data.provider==='deepseek'?'请在插件设置中填写DeepSeek API Key。':'请在插件设置中连接 ChatGPT。');
  $('provider-status').textContent=data.provider==='deepseek'?`DeepSeek API · ${data.model} · ${data.effort==='none'?'非思考':`思考 ${data.effort.toUpperCase()}`}`:`ChatGPT 套餐 · ${data.model} / ${data.effort}`;
  await chrome.storage.local.set({biliProviderIdentity:data.cacheIdentity});
  return data;
@@ -50,7 +50,7 @@ async function analyze(){
 $('btn-retry').onclick=analyze;
 $('analyze').onclick=analyze;
 $('settings-toggle').onclick=()=>$('connection-settings').classList.toggle('hidden');
-$('open').onclick=()=>chrome.tabs.create({url:BASE});
+$('open').onclick=()=>chrome.tabs.create({url:chrome.runtime.getURL('bili/launcher.html?settings=1')});
 // 自动检测开关：保存在本机，默认开启；内容脚本监听变化后立即生效，无需刷新B站页面。
 const autoDetect=$('auto-detect');
 async function initAutoDetectSetting(){
@@ -77,6 +77,7 @@ async function initialState(){
  [activeTab]=await chrome.tabs.query({active:true,currentWindow:true});
  if(activeTab?.url && new URL(activeTab.url).hostname==='www.youtube.com'){location.replace('../popup/popup.html');return;}
  const settings=await chrome.storage.local.get(['theme_preference']);
+ if(typeof location.search==='string' && new URLSearchParams(location.search).get('settings')==='1'){document.body.classList.add('settings-page');$('connection-settings').classList.remove('hidden');}
  applyTheme(settings.theme_preference || localStorage.getItem('sts_theme') || 'system');
  await initialState();
 })().catch(e=>{error(e.message);$('connection-settings').classList.remove('hidden');});
@@ -108,7 +109,7 @@ $('service-toggle').onclick=async()=>{
   if(stopping)await chrome.storage.local.set({biliServiceStopped:true});
   const result=await BiliLocal.control(stopping?'stop':'start');
   if(result.occupied)throw new Error(result.message);
-  if(!stopping && result.running){await chrome.storage.local.set({biliServiceStopped:false});await initialState();refreshUsage();}
+  if(!stopping && result.running){await chrome.storage.local.set({biliServiceStopped:false});await globalThis.PluginSettings?.load();await initialState().catch(()=>{$('connection-settings').classList.remove('hidden');});refreshUsage();}
  }catch(e){serviceError=e.message;$('service-hint').textContent=e.message;}finally{serviceAction=false;await refreshService();}
 };
 refreshService();setInterval(()=>{if(!document.hidden)refreshService();},3000);

@@ -8,9 +8,9 @@ const okResult=score=>({score,engine:'deepseek-flash',effort:'none',provider:'de
 // 用可控的定时器/IntersectionObserver/存储模拟B站页面，验证自动检测调度。
 function fixture({hrefs=[url],store={biliLocalToken:'t'.repeat(43)},analyze,maxConcurrent=1}={}){
  const anchors=hrefs.map(href=>{
-  const anchor={href,style:{},button:null,isConnected:true,
+  const anchor={href,attrs:{},style:{setProperty(){},removeProperty(){}},setAttribute(k,v){this.attrs[k]=v;},removeAttribute(k){delete this.attrs[k];},button:null,isConnected:true,
    querySelector(sel){return sel==='.bili-slop-check'?anchor.button:{};},
-   append(button){anchor.button=button;button.remove=()=>{if(anchor.button===button)anchor.button=null;};}};
+   append(button){anchor.button=button;button.parentElement=anchor;button.remove=()=>{if(anchor.button===button)anchor.button=null;};}};
   return anchor;
  });
  const storeData={...store};
@@ -127,7 +127,7 @@ test('missing subtitles is a final state and is not retried automatically',async
  await tick();
  f.intersect(0);f.runTimers(600);await tick();
  assert.equal(f.calls.length,1);
- assert.equal(f.anchors[0].button.textContent,'暂无可用字幕');
+ assert.equal(f.anchors[0].button.textContent,'无文案');
  f.runTimers(8000);await tick();
  assert.equal(f.calls.length,1);
 });
@@ -165,15 +165,7 @@ test('turning auto detection off drops queued auto work',async()=>{
  assert.equal(f.calls.length,1);
 });
 
-test('saving the connection code later starts detection without a page refresh',async()=>{
- const f=fixture({store:{}});
- await tick();
- f.intersect(0);f.runTimers(600);await tick();
- assert.equal(f.calls.length,0);
- f.change({biliLocalToken:'t'.repeat(43)});
- f.runTimers(600);await tick();
- assert.equal(f.calls.length,1);
-});
+test('automatic connection does not require a saved connection code',async()=>{const f=fixture({store:{}});await tick();f.intersect(0);f.runTimers(600);await tick();assert.equal(f.calls.length,1);});
 
 test('recycled card does not paint a late automatic result on the next video',async()=>{
  let resolve;
@@ -186,4 +178,13 @@ test('recycled card does not paint a late automatic result on the next video',as
  resolve(okResult(.9));await tick();
  assert.equal(f.anchors[0].button,button);
  assert.equal(button.textContent,'检测文案');
+});
+
+test('percentage and cover glow can be toggled independently without new analysis',async()=>{
+ const key='bili_card_plan_BV1xx411c7mD_1';const f=fixture({store:{biliAutoDetect:false,biliProviderIdentity:'acct',[key]:{score:.58,promptVersion:'zh-score-v4',cacheIdentity:'acct'}}});await tick();
+ assert.equal(f.anchors[0].attrs['data-bili-slop-glow'],'orange');assert.equal(f.anchors[0].button.hidden,false);
+ f.change({biliShowPercentage:false});assert.equal(f.anchors[0].button.hidden,true);assert.equal(f.anchors[0].attrs['data-bili-slop-glow'],'orange');
+ f.change({biliShowGlow:false});assert.equal(f.anchors[0].attrs['data-bili-slop-glow'],undefined);
+ f.change({biliShowPercentage:true});assert.equal(f.anchors[0].button.hidden,false);assert.equal(f.anchors[0].attrs['data-bili-slop-glow'],undefined);
+ f.change({biliShowGlow:true});assert.equal(f.anchors[0].attrs['data-bili-slop-glow'],'orange');assert.equal(f.calls.length,0);
 });

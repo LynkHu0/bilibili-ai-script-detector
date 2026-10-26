@@ -1,4 +1,4 @@
-import {mkdir,cp,readFile,writeFile,chmod} from 'node:fs/promises';
+import {mkdir,cp,readFile,writeFile,chmod,rm} from 'node:fs/promises';
 import {spawnSync,spawn} from 'node:child_process';
 import path from 'node:path';import os from 'node:os';import {fileURLToPath,pathToFileURL} from 'node:url';
 import {EXTENSION_ID,HOST} from './identity.mjs';
@@ -13,6 +13,7 @@ for(const name of ['extension','local-server','native']){
  const filter=p=>!['node_modules','.local-data','controller-config.json','.DS_Store'].includes(path.basename(p));
  if(path.resolve(source)!==path.resolve(target))await cp(path.join(source,name),path.join(target,name),{recursive:true,force:true,filter});
 }
+await rm(path.join(target,'local-server/settings-ui.js'),{force:true});
 for(const name of ['VERSION','使用说明.md','PRIVACY.md','UPSTREAM.md'])try{await cp(path.join(source,name),path.join(target,name),{force:true});}catch{}
 const native=path.join(target,'native');
 const nodePath=process.argv[2] || process.execPath;
@@ -30,8 +31,15 @@ if(windows){
  for(const browser of ['Google/Chrome','Microsoft Edge','Chromium','Google/ChromeForTesting']){const dir=path.join(os.homedir(),'Library/Application Support',browser,'NativeMessagingHosts');await mkdir(dir,{recursive:true});await writeFile(path.join(dir,HOST+'.json'),JSON.stringify(manifest,null,2));}
 }
 console.log('本机控制组件已安装。浏览器加载以下 extension 文件夹：\n'+path.join(target,'extension'));
-console.log('如果已经加载旧版扩展，请先移除旧版，再从上面的路径加载新版。账号配置保留在本机服务数据目录。');
+console.log('已使用1.5.11或光晕测试版时，只需重新加载现有扩展；更早版本请移除旧扩展，再从上面的路径加载。账号配置保留在本机。');
 try{await readFile(path.join(target,'local-server/package.json'));const npm=spawnSync(windows?'npm.cmd':'npm',['ci','--omit=dev','--no-fund','--no-audit'],{cwd:path.join(target,'local-server'),stdio:'inherit',shell:windows,windowsHide:true});if(npm.status!==0)throw new Error('源码依赖安装失败。');}catch(e){if(e.code!=='ENOENT')throw e;}
-const {start}=await import(pathToFileURL(path.join(native,'controller.mjs')).href);const result=await start();
+const {start,stop,status}=await import(pathToFileURL(path.join(native,'controller.mjs')).href);
+let current=await status();const desired=(await readFile(path.join(target,'VERSION'),'utf8')).trim();
+if(current.running && current.version!==desired){
+ console.log('正在等待旧版服务已发出的任务完成，然后切换到新版后台服务…');await stop();
+ for(let i=0;i<210;i++){current=await status();if(!current.running)break;await new Promise(resolve=>setTimeout(resolve,1000));}
+ if(current.running)throw new Error('旧版任务仍在运行，请稍后在插件中停止旧服务再启动新版。');
+}
+const result=await start();
 console.log(result.running?'检测服务已在后台运行，可以关闭此安装窗口。':result.message || '请在插件中点击启动检测服务。');
 const opener=windows?spawn('explorer.exe',[path.join(target,'extension')],{detached:true,stdio:'ignore',windowsHide:true}):spawn('open',[path.join(target,'extension')],{detached:true,stdio:'ignore'});opener.on('error',()=>{});opener.unref();

@@ -2,16 +2,16 @@ const {test}=require('node:test');const assert=require('node:assert/strict');con
 const base=path.join(__dirname,'../extension/bili');
 function setup(noCaptions=false,badScore=false,queued=false,maxConcurrent=4){
  let polls=0;
- const store={biliLocalToken:'test-token'};let listener;let calls=[];
+ const store={biliLocalToken:'t'.repeat(43)};let listener;let calls=[];
  const ctx={URL,AbortSignal,Map,Number,setTimeout:fn=>fn(),chrome:{runtime:{onMessage:{addListener(fn){listener=fn;}}},storage:{local:{async get(k){return {[k]:store[k]};},async set(v){Object.assign(store,v);}}}},fetch:async(url,opts)=>{calls.push({url,opts});let data;
- if(url.endsWith('/api/status'))data={connected:true,model:'gpt-6-luna',effort:'high',maxConcurrent,promptVersion:'zh-script-v2',cacheIdentity:'test-account'};
+ if(url.endsWith('/api/status'))data={connected:true,model:'gpt-6-luna',effort:'high',maxConcurrent,promptVersion:'zh-score-v4',cacheIdentity:'test-account'};
  else if(url.includes('/view?'))data={code:0,data:{title:'测试',pages:[{cid:11},{cid:22}]}};
  else if(url.includes('/wbi/v2'))data={code:0,data:{subtitle:{subtitles:noCaptions?[]:[{lan:'ai-zh',subtitle_url:'https://aisubtitle.hdslb.com/test.json'}]}}};
  else if(url.includes('hdslb.com'))data={body:[{content:'这是一段用于检测字幕接入链路的中文文案。'.repeat(8)}]};
  else if(queued && (url.endsWith('/api/jobs') || (url.includes('/api/jobs/') && ++polls===1)))data={status:url.endsWith('/api/jobs')?'queued':'running',queuePosition:1,jobId:'x'.repeat(32)};
  else data={status:'completed',result:{score:badScore?2:.8,engine:'gpt-6-luna',effort:'high',cacheIdentity:'test-account'}};
  return {ok:true,json:async()=>data};}};
- vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(base,'core.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(path.join(base,'background.js'),'utf8'),ctx);
+ vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(base,'local-service.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(path.join(base,'core.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(path.join(base,'background.js'),'utf8'),ctx);
  return {ctx,store,calls,send:(url,type='BILI_ANALYZE')=>new Promise(resolve=>listener({type,url},{},resolve))};
 }
 test('strict platform URL and page parsing',()=>{const {ctx}=setup();assert.equal(ctx.BiliSlop.parse('https://evil.example/video/BV1xx411c7mD'),null);assert.equal(ctx.BiliSlop.parse('https://www.bilibili.com/video/BV1xx411c7mD?p=-1'),null);assert.equal(ctx.BiliSlop.parse('https://www.bilibili.com/video/BV1xx411c7mD?p=2').p,2);});

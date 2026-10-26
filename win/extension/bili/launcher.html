@@ -184,11 +184,37 @@
       <a id="usage-official" href="https://chatgpt.com/settings/usage" target="_blank" rel="noreferrer">查看官方套餐用量</a>
     </section>
     <section id="connection-settings" class="connection-settings hidden" aria-label="连接设置">
-      <h2>连接设置</h2>
+      <h2>服务与显示设置</h2>
+      <button id="open" class="btn btn-retry" type="button">在独立标签页打开插件设置</button>
       <p id="provider-status"></p>
-      <button id="open" class="btn btn-retry">选择服务 / API设置</button>
-      <p class="settings-hint">安装本机组件后，可直接使用上方按钮在后台启动或停止服务。服务运行时，选择 ChatGPT 或 DeepSeek 并配置即可。</p>
-      <p id="connection-message" role="status"></p>
+      <form id="provider-form">
+        <label for="provider">检测服务</label>
+        <select id="provider"><option value="chatgpt">ChatGPT 套餐</option><option value="deepseek">DeepSeek API</option></select>
+        <label for="max-concurrent">并发任务数（1–100）</label><input id="max-concurrent" type="number" min="1" max="100" step="1" value="10" required>
+        <div id="chatgpt-config">
+          <label for="chatgpt-model">ChatGPT 模型</label><input id="chatgpt-model" list="chatgpt-models" autocomplete="off" required><datalist id="chatgpt-models"></datalist>
+          <label for="chatgpt-effort">推理强度</label><select id="chatgpt-effort"><option value="auto">auto</option><option value="none">none</option><option value="minimal">minimal</option><option value="low">low</option><option value="medium">medium</option><option value="high">high</option><option value="xhigh">xhigh</option><option value="max">max</option><option value="ultra">ultra</option></select>
+          <p id="model-notice" class="settings-hint"></p><button id="refresh-models" class="btn btn-retry" type="button">刷新模型列表</button>
+        </div>
+        <div id="deepseek-config" hidden>
+          <label for="deepseek-model">DeepSeek 模型</label><select id="deepseek-model"><option value="deepseek-flash">DeepSeek Flash</option><option value="deepseek-v4-pro">DeepSeek Pro</option></select>
+          <label for="deepseek-thinking">思考模式</label><select id="deepseek-thinking"><option value="disabled">关闭</option><option value="enabled">开启</option></select>
+          <div id="deepseek-effort-row"><label for="deepseek-effort">思考强度</label><select id="deepseek-effort"><option value="low">Low</option><option value="high">High</option><option value="max">Max</option></select></div>
+          <label for="deepseek-key">DeepSeek API Key</label><input id="deepseek-key" type="password" autocomplete="new-password" placeholder="填写 API Key">
+          <label class="switch-row"><input id="clear-key" type="checkbox"><span>删除已保存的 Key（请同时选回 ChatGPT）</span></label>
+          <p class="settings-hint">Key 只提交到本机服务保存，不写入插件存储；留空可保留原 Key。</p>
+        </div>
+        <button id="save-config" class="btn btn-retry" type="submit" disabled>保存设置</button>
+      </form>
+      <div id="chatgpt-accounts" class="account-settings">
+        <h3>ChatGPT 账户</h3><p id="account-empty" class="settings-hint">尚未连接账户。</p><div id="account-list"></div>
+        <button id="add-account" class="btn btn-retry" type="button">Continue with ChatGPT · 添加账户</button>
+        <button id="logout-account" class="btn btn-retry" type="button" hidden>退出当前账户</button>
+      </div>
+      <button id="refresh-config" class="btn btn-retry" type="button">刷新账户与设置</button>
+      <p id="config-message" role="status" aria-live="polite"></p>
+      <label class="switch-row" for="show-percentage"><input id="show-percentage" type="checkbox" checked><span>显示封面百分比</span></label>
+      <label class="switch-row" for="show-glow"><input id="show-glow" type="checkbox" checked><span>显示封面颜色光晕</span></label>
       <label class="switch-row" for="auto-detect">
         <input id="auto-detect" type="checkbox">
         <span>自动检测可见的视频卡片</span>
@@ -204,6 +230,7 @@
   <script src="local-service.js"></script>
   <script src="core.js"></script>
   <script src="usage-format.js"></script>
+  <script src="plugin-settings.js"></script>
   <script src="launcher.js"></script>
 </body>
 </html>

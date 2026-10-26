@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Stop the Slop for Browser",
   "description": "保留 YouTube 功能，B站字幕文案检测、本地封面标记，并自动检测可见视频卡片。",
-  "version": "1.5.11",
+  "version": "1.5.12",
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",

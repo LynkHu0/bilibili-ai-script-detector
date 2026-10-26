@@ -1,16 +1,16 @@
 # Stop the Slop for Browser
 
-当前版本 **1.5.11**：插件显示检测服务运行状态，并提供启动 / 停止按钮。服务在电脑后台运行，不必保留终端窗口。使用自己的 ChatGPT 或 DeepSeek API。
+当前版本 **1.5.12**：服务和账号设置全部集成到浏览器插件，封面三色光晕正式加入；百分比与光晕可独立开关。无需本地 WebUI。
 
-| 平台 | 安装教程 | 一次性组件安装入口 |
+| 平台 | 安装教程 | 更新入口 |
 | --- | --- | --- |
 | macOS（Apple 芯片 / Intel 共用） | [mac/](mac/) | 安装本机组件.command |
 | Windows | [win/](win/) | 安装本机组件.bat |
 
-[下载最新轻量包](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest)。包内不含 Node.js，请先从 [官网](https://nodejs.org/) 安装 Node.js 22 或更新版本。
+[下载最新轻量包](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest)。先从 [Node.js 官网](https://nodejs.org/) 安装 22 或更新版本；包内不含 Node.js，服务依赖已合并。
 
-安装流程：安装 Node.js → 解压 → 关闭旧版终端并运行一次组件安装 → 移除旧扩展并加载安装程序打开的新版 extension → 插件里点击启动服务 → 配置 ChatGPT 或 DeepSeek。此后直接在插件里开关，自动连接，无需连接码。
+安装组件后加载永久位置的 extension。在插件内启动/停止服务、选择模型与推理强度、设置并发、添加/切换/退出 ChatGPT 账户或保存 DeepSeek Key，并查看用量。ChatGPT 登录自然会打开 OpenAI 官方授权页，完成后返回插件。插件独立设置标签页仍属于扩展，不是本地 WebUI。
 
-停止时取消未开始的任务，等待已提交请求完成后退出；没有设置开机自启动。旧扩展缓存不会自动迁移，服务账号配置保留在本机。发布包不包含个人账号、Key 或 Cookie。
+已使用1.5.11或光晕测试版时无需删除扩展，更新本机组件后重新加载即可。账号配置与缓存保留。百分比和光晕默认开启，只改变显示，不增加检测调用；分数不能证明创作来源。
 
-已检查隔离本机启动停止及原生通信协议，未调用 AI；Windows 实机和浏览器按钮完整实测仍待验证。来源、隐私与许可边界见各平台的 PRIVACY.md、UPSTREAM.md。
+“浏览器插件自动连接”“检查当前检测服务”两块旧界面已删除。详情见各平台 README、PRIVACY、UPSTREAM。

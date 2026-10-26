@@ -15,3 +15,10 @@
 .usage-panel{padding:12px 0;border-top:1px solid var(--border-subtle);font-size:12px;line-height:1.6}.usage-panel p{margin:0 0 4px}.usage-panel #usage-primary{font-weight:600;color:var(--text-primary)}.usage-panel #usage-detail,.usage-panel #usage-notice{color:var(--text-muted);font-size:11px}.usage-panel a{color:var(--text-secondary);font-size:11px}
 
 .score-disclaimer{font-size:11px;line-height:1.5;color:var(--text-muted);margin:8px 0 12px;text-align:center}
+
+.connection-settings select{width:100%;box-sizing:border-box;border:1px solid var(--border-subtle);border-radius:6px;padding:9px;background:var(--bg-secondary);color:var(--text-primary);font:inherit;font-size:12px}
+#provider-form{margin-top:14px}#provider-form [hidden],#chatgpt-accounts[hidden]{display:none!important}
+.account-settings{margin-top:18px;padding-top:12px;border-top:1px solid var(--border-subtle)}.account-settings h3{font-size:13px}
+.account-row{padding:9px 0;border-bottom:1px solid var(--border-subtle);font-size:12px;overflow-wrap:anywhere}.account-row span{display:block;color:var(--text-secondary)}
+#config-message{margin-top:10px;font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+body.settings-page{width:auto;max-width:760px;min-width:360px;margin:0 auto}body.settings-page .container{max-width:none}body.settings-page #state-not-youtube,body.settings-page #state-ready{display:none!important}body.settings-page #connection-settings{display:block!important}

@@ -13,6 +13,6 @@ export class ModelCatalog {
    const data=await r.json();if(!Array.isArray(data.models))throw new Error('模型列表格式不符合预期');
    this.models=data.models.filter(m=>m.visibility==='list' && typeof m.slug==='string').map(m=>({slug:m.slug,name:typeof m.display_name==='string'?m.display_name:m.slug}));
    this.error=this.models.length?'':'账户未返回可显示的模型，可填写已知可用的模型ID。';
-  }catch{this.error='模型列表读取失败；可保留当前模型，或填写账户可用的模型ID后测试。';}
+  }catch{this.error='模型列表读取失败；可保留当前模型，或填写账户可用的模型ID。';}
  }
 }

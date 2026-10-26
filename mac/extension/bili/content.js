@@ -8,10 +8,24 @@
   const cards = new WeakMap();
   const live = new Set();
   const pending = [];
-  const state = {auto:true, userStopped:false, token:'', active:0, maxConcurrent:1, pausedUntil:0, resumeTimer:null};
+  const state = {auto:true, userStopped:false, showPercentage:true, showGlow:true, token:'', active:0, maxConcurrent:1, pausedUntil:0, resumeTimer:null};
 
   const style=document.createElement('style');
   style.textContent='.bili-slop-check{position:absolute;top:5px;left:5px;z-index:12;border:0;border-radius:5px;padding:5px 7px;background:#242737eb;color:white;font:12px system-ui;cursor:pointer}.bili-slop-check:disabled{opacity:.72;cursor:default}';
+  // Cover-only glow: title and creator rows remain unchanged.
+  style.textContent+=`
+    a[data-bili-slop-glow="green"]{--bili-slop-glow-rgb:52,211,153}
+    a[data-bili-slop-glow="orange"]{--bili-slop-glow-rgb:251,146,60}
+    a[data-bili-slop-glow="red"]{--bili-slop-glow-rgb:248,113,113}
+    a[data-bili-slop-glow]::after{
+      content:"";position:absolute;inset:0;z-index:11;pointer-events:none;
+      border-radius:var(--bili-slop-glow-radius,6px);
+      box-shadow:inset 0 0 0 2px rgba(var(--bili-slop-glow-rgb),.98),
+        inset 0 0 9px rgba(var(--bili-slop-glow-rgb),.20),
+        0 0 8px rgba(var(--bili-slop-glow-rgb),.64),
+        0 0 18px rgba(var(--bili-slop-glow-rgb),.30);
+    }
+  `;
   document.head.append(style);
 
   const observer = typeof IntersectionObserver === 'function' ? new IntersectionObserver(entries => {
@@ -23,11 +37,27 @@
     }
   }, {rootMargin:'200px 0px', threshold:0}) : null;
 
+  function clearGlow(anchor){
+    anchor.removeAttribute('data-bili-slop-glow');
+    anchor.style.removeProperty('--bili-slop-glow-radius');
+  }
   function paint(button,result){
+    const anchor=button.parentElement;
+    const record=anchor&&cards.get(anchor);if(record)record.result=result;
+    button.hidden=!state.showPercentage;
+    if(anchor && state.showGlow){
+      const media=anchor.querySelector('.bili-video-card__image,img,picture,video');
+      const radius=media?getComputedStyle(media).borderRadius:'6px';
+      anchor.style.setProperty('--bili-slop-glow-radius',radius&&radius!=='0px'?radius:'6px');
+      anchor.setAttribute('data-bili-slop-glow',result.score>.7?'red':result.score<.4?'green':'orange');
+    }
+
+    if(anchor&&!state.showGlow)clearGlow(anchor);
     button.textContent=`${Math.round(result.score*100)}%`;
     button.style.background=result.score>.7?'#a9233aeb':result.score<.4?'#17624deb':'#795b19eb';
     button.title=`${result.provider==='deepseek'?'DeepSeek API':'ChatGPT 套餐'} · ${result.engine || 'gpt-6-luna'} · 本机已检测结果；启发式评分，不能证明创作来源`;
   }
+  function refreshDisplay(){for(const record of live){if(alive(record)&&record.result)paint(record.button,record.result);}}
   function errorLabel(error){
     if(error.code==='NO_SUBTITLES')return '无文案';
     if(/队列已满/.test(error.message))return '队列已满 · 稍后再试';
@@ -50,6 +80,7 @@
   }
   function label(record,text,title){
     if(!alive(record))return;
+    clearGlow(record.anchor);record.result=null;record.button.hidden=false;
     record.button.textContent=text;record.button.title=title || '';
   }
   function clearTimer(record){
@@ -177,14 +208,14 @@
   }
 
   function resetCards(){
-    for(const record of live){clearTimer(record);record.stale=true;observer?.unobserve(record.anchor);}
+    for(const record of live){clearTimer(record);clearGlow(record.anchor);record.stale=true;observer?.unobserve(record.anchor);}
     live.clear();pending.length=0;
     scan();
   }
 
   function scan(){
     for(const record of live){
-      if(record.anchor.isConnected===false){clearTimer(record);observer?.unobserve(record.anchor);live.delete(record);cards.delete(record.anchor);}
+      if(record.anchor.isConnected===false){clearGlow(record.anchor);clearTimer(record);observer?.unobserve(record.anchor);live.delete(record);cards.delete(record.anchor);}
     }
     document.querySelectorAll('a[href*="/video/BV"]').forEach(a=>{
       if(!a.querySelector('img,picture,video'))return;
@@ -194,6 +225,7 @@
       if(previous && !previous.stale && previous.identity===identity)return;
       if(previous){clearTimer(previous);previous.stale=true;observer?.unobserve(previous.anchor);live.delete(previous);}
       if(previous?.button)previous.button.remove();
+      clearGlow(a);
       if(getComputedStyle(a).position==='static')a.style.position='relative';
       const button=document.createElement('button');button.className='bili-slop-check';button.type='button';button.textContent='检测文案';
       button.title=state.auto?'自动检测已开启：卡片进入可视区域后自动检测，也可点击立即检测':'点击检测文案';
@@ -221,8 +253,8 @@
     });
   }
 
-  chrome.storage.local.get(['biliAutoDetect','biliLocalToken','biliServiceStopped']).then(async settings=>{
-    state.auto=settings?.biliAutoDetect!==false;state.userStopped=settings?.biliServiceStopped===true;
+  chrome.storage.local.get(['biliAutoDetect','biliLocalToken','biliServiceStopped','biliShowPercentage','biliShowGlow']).then(async settings=>{
+    state.auto=settings?.biliAutoDetect!==false;state.userStopped=settings?.biliServiceStopped===true;state.showPercentage=settings?.biliShowPercentage!==false;state.showGlow=settings?.biliShowGlow!==false;refreshDisplay();
     state.token='auto';
     await refreshConcurrency();
     resumeVisible();
@@ -233,6 +265,7 @@
   new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(scan,250);}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['href']});
   chrome.storage.onChanged.addListener((changes,area)=>{
     if(area!=='local')return;
+    if(changes.biliShowPercentage || changes.biliShowGlow){if(changes.biliShowPercentage)state.showPercentage=changes.biliShowPercentage.newValue!==false;if(changes.biliShowGlow)state.showGlow=changes.biliShowGlow.newValue!==false;refreshDisplay();}
     if(changes.biliServiceStopped){state.userStopped=changes.biliServiceStopped.newValue===true;if(state.userStopped)cancelAuto();else{state.pausedUntil=0;if(state.resumeTimer){clearTimeout(state.resumeTimer);state.resumeTimer=null;}refreshConcurrency().finally(resumeVisible);resumeVisible();}}
     if(changes.biliAutoDetect){
       state.auto=changes.biliAutoDetect.newValue!==false;

@@ -19,7 +19,7 @@ globalThis.BiliLocal = (() => {
   async function request(path,options={}) {
     if(!/^\/api\//.test(path))throw new Error('无效的本机接口。');
     const send=async code=>{
-      try{return await fetch(base+path,{...options,headers:{...options.headers,Authorization:'Bearer '+code},signal:AbortSignal.timeout(10000),redirect:'error'});}
+      try{return await fetch(base+path,{...options,headers:{...options.headers,Authorization:'Bearer '+code},signal:options.signal || AbortSignal.timeout(10000),redirect:'error'});}
       catch{throw new Error('无法连接本地检测程序，请先启动它；启动后会自动连接。');}
     };
     let response=await send(await token());
