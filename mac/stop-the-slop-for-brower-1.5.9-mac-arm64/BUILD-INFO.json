@@ -1,0 +1,9 @@
+{
+  "version": "1.5.9",
+  "platform": "macOS",
+  "arch": "arm64",
+  "node_archive": "node-v24.22.1-darwin-arm64.tar.gz",
+  "node_archive_sha256": "89c682593d76cd44233fa53b1563264e7de9cbb189cad169135c5b4fadfbc0a7",
+  "node_source": "https://nodejs.org/dist/v24.22.1/",
+  "server_bundle_sha256": "f536be62e3214700b929460c493c0b69e747422dc43f8ef294abf1f5f56080bc"
+}

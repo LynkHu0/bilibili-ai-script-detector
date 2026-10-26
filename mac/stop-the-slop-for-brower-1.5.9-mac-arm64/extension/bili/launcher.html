@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>Stop the Slop for BIlibili</title>
+  <script src="../popup/theme-init.js"></script>
+  <link rel="stylesheet" href="../popup/popup.css">
+  <link rel="stylesheet" href="launcher.css">
+</head>
+<body>
+  <div class="container" id="popup-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-top">
+        <div class="logo-row">
+          <img src="../icons/icon-48.png" alt="Stop the Slop for BIlibili" class="logo-img">
+          <h1 class="logo-text">Stop the Slop for BIlibili</h1>
+        </div>
+        <!-- Tiny Theme Toggle -->
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme mode" title="Theme: System (Auto)">
+          <span class="theme-icon theme-icon-system" id="theme-icon-system" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </span>
+          <span class="theme-icon theme-icon-dark hidden" id="theme-icon-dark" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </span>
+          <span class="theme-icon theme-icon-light hidden" id="theme-icon-light" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+          </span>
+        </button>
+      </div>
+      <p class="subtitle">AI Script Detector for Bilibili</p>
+    </header>
+
+
+    <!-- State: Not on YouTube -->
+    <div id="state-not-youtube" class="state hidden">
+      <div class="state-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+          <polyline points="17 2 12 7 7 2"></polyline>
+        </svg>
+      </div>
+      <p class="state-message">打开一个B站视频即可检测文案。</p>
+    </div>
+
+    <div id="state-ready" class="state hidden">
+      <p class="state-message">点击检测当前视频文案</p>
+      <button id="analyze" class="btn btn-retry">检测文案</button>
+    </div>
+    <!-- State: Loading -->
+    <div id="state-loading" class="state hidden">
+      <div class="spinner-container">
+        <div class="spinner"></div>
+      </div>
+      <p class="state-message">正在检测文案…</p>
+      <p class="state-sub"></p>
+    </div>
+
+    <!-- State: Error -->
+    <div id="state-error" class="state hidden">
+      <div class="state-icon error-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <p class="state-message error-text" id="error-message">暂时无法检测</p>
+      <button class="btn btn-retry" id="btn-retry">重试</button>
+    </div>
+
+    <!-- State: Rate Limited -->
+    <div id="state-rate-limit" class="state hidden">
+      <div class="rate-limit-card">
+        <div class="rate-limit-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <h2 class="rate-limit-title">Rate Limit Reached</h2>
+        <p class="state-message" id="rate-limit-message">You have reached the request limit. Please wait a moment before analyzing more videos.</p>
+        
+        <div class="cooldown-badge" id="rate-limit-cooldown">
+          <span class="cooldown-dot"></span>
+          <span>Available again in <strong id="cooldown-seconds">30s</strong></span>
+        </div>
+
+        <button class="btn btn-retry" id="btn-rate-limit-retry" disabled>
+          <span id="rate-limit-retry-text">Wait 30s...</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- State: Result -->
+    <div id="state-result" class="state hidden">
+      <!-- Score gauge -->
+      <div class="gauge-container">
+        <div class="gauge">
+          <svg viewBox="0 0 200 120" class="gauge-svg">
+            <defs>
+              <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#16a34a"/>
+                <stop offset="50%" stop-color="#d97706"/>
+                <stop offset="100%" stop-color="#dc2626"/>
+              </linearGradient>
+            </defs>
+            <!-- Background arc -->
+            <path
+              d="M 20 100 A 80 80 0 0 1 180 100"
+              fill="none"
+              class="gauge-bg-arc"
+              stroke-width="12"
+              stroke-linecap="round"
+            />
+            <!-- Filled arc -->
+            <path
+              id="gauge-fill"
+              d="M 20 100 A 80 80 0 0 1 180 100"
+              fill="none"
+              stroke="url(#gaugeGrad)"
+              stroke-width="12"
+              stroke-linecap="round"
+              stroke-dasharray="251.33"
+              stroke-dashoffset="251.33"
+            />
+            <!-- Needle -->
+            <line
+              id="gauge-needle"
+              class="gauge-needle-line"
+              x1="100" y1="100"
+              x2="100" y2="30"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              transform="rotate(-90, 100, 100)"
+            />
+            <circle class="gauge-needle-dot" cx="100" cy="100" r="5"/>
+          </svg>
+        </div>
+        <div class="score-display">
+          <span class="score-value" id="score-value">0%</span>
+          <span class="score-label" id="score-label">AI文案疑似评分</span>
+        </div>
+      </div>
+
+      <!-- Verdict -->
+      <div class="verdict" id="verdict">
+        <span class="verdict-dot" id="verdict-dot"></span>
+        <span class="verdict-text" id="verdict-text">Analyzing...</span>
+      </div>
+
+
+    </div>
+
+    <p class="score-disclaimer">分数是模型估计，未经概率校准，不能证明创作来源。</p>
+    <section id="usage-panel" class="usage-panel" aria-label="服务用量" aria-live="polite">
+      <p id="usage-primary">正在读取服务用量…</p><p id="usage-detail"></p><p id="usage-notice"></p>
+      <a id="usage-deepseek" href="https://platform.deepseek.com/usage" target="_blank" rel="noreferrer" hidden>同步DeepSeek官方账单</a>
+      <a id="usage-official" href="https://chatgpt.com/settings/usage" target="_blank" rel="noreferrer">查看官方套餐用量</a>
+    </section>
+    <section id="connection-settings" class="connection-settings hidden" aria-label="连接设置">
+      <h2>连接设置</h2>
+      <p id="provider-status"></p>
+      <button id="open" class="btn btn-retry">选择服务 / API设置</button>
+      <p class="settings-hint">插件会自动连接本机检测程序。启动程序后，选择 ChatGPT 或 DeepSeek 并配置即可。</p>
+      <p id="connection-message" role="status"></p>
+      <label class="switch-row" for="auto-detect">
+        <input id="auto-detect" type="checkbox">
+        <span>自动检测可见的视频卡片</span>
+      </label>
+      <p class="settings-hint">开启后，B站列表页、搜索页的视频卡片滚动到可视区域时会自动检测（按本地服务的并发设置处理，其余排队）。关闭后恢复为手动点击。每次自动检测都会调用你配置的服务并产生相应费用。</p>
+    </section>
+    <!-- Footer -->
+    <footer class="footer">
+      <span>结果仅供参考</span><button id="settings-toggle" class="settings-toggle" aria-label="连接设置" title="连接设置">⚙</button>
+    </footer>
+  </div>
+
+  <script src="local-service.js"></script>
+  <script src="core.js"></script>
+  <script src="usage-format.js"></script>
+  <script src="launcher.js"></script>
+</body>
+</html>

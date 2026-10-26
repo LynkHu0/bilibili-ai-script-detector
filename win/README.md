@@ -1,119 +1,20 @@
-# Stop the Slop for Browser
+# Stop the Slop for Browser 1.5.10 · win 版
 
-> **AI Script Detector for Bilibili**：读取 B站视频字幕，用你自己的 ChatGPT 账户或 DeepSeek API，为视频文案提供 AI 疑似评分。
+本版为轻量包，不内置 Node.js。自动连接本机服务，卡片结果显示百分比或“无文案”。
 
-[![Download](https://img.shields.io/badge/Download-GitHub_Releases-0f172a?style=flat-square)](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest)
-[![Browsers](https://img.shields.io/badge/Browser-Chrome_%2F_Edge-4285F4?style=flat-square)](#installation)
-[![Privacy](https://img.shields.io/badge/Privacy-Policy-15803d?style=flat-square)](PRIVACY.md)
-[![Upstream](https://img.shields.io/badge/Upstream-Stop_the_Slop-555?style=flat-square)](https://github.com/MauroPello/stop-the-slop)
+## 安装与使用
 
-基于 **[MauroPello/stop-the-slop](https://github.com/MauroPello/stop-the-slop)** 的非官方 B站适配，保留上游 YouTube 代码，新增 B站字幕读取、本地服务和检测界面。非上游官方版本，与 B站及模型服务商无隶属或背书关系。
+1. 从 [Node.js 官网](https://nodejs.org/) 下载适合自己系统和处理器的安装程序，安装 **Node.js 22 或更新版本**（可选官网符合要求的 LTS 版）。安装完成后重新打开终端或启动文件。
+2. 从 [GitHub Release](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest) 下载 `-win.zip` 并完整解压。
+3. 双击 `启动检测-Windows.bat`，保持窗口运行。发布包已包含服务代码依赖，无需执行 npm install。
+4. Chrome / Edge 扩展管理页开启开发人员模式，加载本包 `extension` 文件夹。
+5. 打开 `http://127.0.0.1:17653/`，连接自己的 ChatGPT 或填写并保存 DeepSeek Key。插件会自动连接，无需复制连接码。
+6. 登录 B站并刷新页面。无可用字幕的视频显示“无文案”，其他结果为模型的疑似判断，不能证明创作来源。
 
----
+更新时先停止旧服务，再启动新版，并在扩展管理页更新/重新加载扩展。不要同时运行多个服务副本。
 
-## 下载与相关项目
+用户配置位于 `%LOCALAPPDATA%\BiliSlopData`，请勿分享。安装包不包含账户、Key、Cookie 或本机连接凭据。
 
-- **安装包：** [下载最新版本](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest)，解压后加载扩展。当前发布版本为 **1.5.9**。
-- **问题反馈：** [GitHub Issues](https://github.com/LynkHu0/stop-the-slop-for-brower/issues)。反馈前请移除 Key、Cookie、连接码和账户信息。
-- **上游项目：** [Stop the Slop — YouTube AI Script Detector](https://github.com/MauroPello/stop-the-slop)。
+## 源码开发
 
-本适配版通过 GitHub 分发，尚未上架浏览器扩展商店；上游的商店入口不安装本适配版。
-
----
-
-## 功能
-
-- **封面评分标记：** 在支持的 B站首页、搜索、UP空间等列表卡片上显示疑似评分，观看前即可参考。
-- **可见卡片自动检测：** 卡片进入可视区域及约200px预加载区后排队检测，也可手动点击。自动检测默认开启，可在插件齿轮设置关闭。
-- **视频页仪表盘：** 打开扩展查看当前视频的评分和简短等级，不提供模型解释或逐句证据。
-- **两种检测服务：** 选择自己的 ChatGPT 账户或 DeepSeek API Key；两者不会自动切换。ChatGPT 可用性以账户权限和服务支持范围为准。
-- **本机评分缓存：** 按视频分P、账户/Key、模型、推理设置和提示词版本隔离；已有有效结果尽量复用，减少重复调用。
-- **并发与用量：** 本地服务支持1–100并发，默认10，多标签页共用限制；展示本工具记录的 token 用量和 DeepSeek 费用估计，可手动同步官方账单摘要。
-- **明暗主题：** 支持跟随系统及手动切换。
-
-**分数不是来源证明。** 它是模型的启发式估计，未经概率校准，不等于 AI 实际创作字数比例。不要据此指控作者、判断违规或作出处罚。
-
----
-
-## 仓库结构
-
-```text
-├── extension/                 # Chrome / Edge 扩展（Manifest V3）
-│   ├── bili/                  # B站字幕、卡片及仪表盘
-│   ├── billing/               # 用户触发的 DeepSeek 账单同步
-│   ├── popup/                 # 保留的上游 YouTube 弹窗
-│   └── manifest.json
-├── local-server/              # 本机登录、模型调用、队列与用量
-├── tests/                     # 浏览器逻辑模拟检查
-├── worker/                    # 历史 Cloudflare 后端源码
-├── 启动检测-Windows.bat         # Windows 启动入口
-├── PRIVACY.md                 # 数据去向、保存及清除
-└── UPSTREAM.md                # 上游来源与许可说明
-```
-
-B站检测使用 `local-server`，不需要部署 `worker`。不能用上游的 YouTube 后端代替本地 B站服务。
-
----
-
-<a id="installation"></a>
-## 安装（开发者模式）
-
-### 1. 启动本地服务
-
-1. 下载对应平台安装包；包内已包含 Node.js 和运行依赖，无需另外安装。
-2. [下载安装 ZIP](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest) 并完整解压。
-3. Windows 双击 `Install.cmd`，按提示安装。源码开发启动才使用 `启动检测-Windows.bat`。
-4. 打开 `http://127.0.0.1:17653`，选择服务并配置自己的 ChatGPT 账户或 DeepSeek Key，保存后测试。测试也会消耗用量。
-
-### 2. 加载 Chrome / Edge 扩展
-
-1. Chrome 打开 `chrome://extensions`，Edge 打开 `edge://extensions`。
-2. 开启 **开发者模式**，点击 **加载已解压的扩展程序**，选择 `extension` 文件夹。
-插件会自动连接本机检测程序，无需复制或填写连接码。你只需启动程序、加载浏览器扩展，并连接自己的 ChatGPT 或配置 DeepSeek Key。
-4. 阅读 [隐私说明](PRIVACY.md)，按需关闭自动检测，然后登录 B站并刷新页面。
-
-连接凭据由插件自动获取并保存在本机，重启或失效后自动重新连接。滚动浏览可能自动调用模型并产生用量；关闭开关不保证取消已经发出的请求。
-
----
-
-## 适用范围与限制
-
-- 面向电脑 Chrome / Edge 的 B站网页，不适用于 B站手机 App；其他浏览器未作兼容性承诺。
-- 仅分析可获取的官方字幕前15000字符，至少需要50字符。无字幕、太短、登录失败和接口错误不生成有效评分，不自动转录音频。
-- 高并发和长字幕可能增加耗时、费用或限流，不保证“即时检测”。B站页面和接口变化也可能导致功能失效。
-- ChatGPT 的套餐、模型、地区及工作区权限以服务商当前支持为准。DeepSeek 使用自己的 API 余额。
-- 当前版本通过 **60项模拟自动检查**，不代表所有设备、真实账户或来源识别准确率已验收。
-
----
-
-## 隐私与权限
-
-B站字幕先进入本机服务，再发送至你选择的 **OpenAI 或 DeepSeek**；B站 Cookie 不作为模型请求字段发送。保留的 YouTube 功能会查询上游 Cloudflare 服务，检测时还会向它提交视频 ID 和字幕。
-
-DeepSeek 用量页同步需要用户先点击按钮，只向本机同步可见的账单摘要与筛选标签。OAuth令牌、Key及连接码保存在本机数据文件中，**没有应用层加密**；配置后的文件及备份不要分享。
-
-域名权限、保存期限、Windows权限差异、自动检测及完整清除步骤见 **[PRIVACY.md](PRIVACY.md)**。下载包不包含个人凭据，不能把配置后的运行目录当作干净安装包分享。
-
----
-
-## 开发与检查
-
-```sh
-git clone https://github.com/LynkHu0/stop-the-slop-for-brower.git
-cd stop-the-slop-for-brower/win/local-server
-npm ci
-cd ..
-node --test local-server/test.mjs local-server/*.test.mjs tests/*.test.cjs
-```
-
----
-
-## 上游与许可证
-
-感谢 **MauroPello** 的 [Stop the Slop](https://github.com/MauroPello/stop-the-slop)。本适配参考 commit `dec988b03ff63224aa6d6c796b5963eb3ccac95e`。
-
-上游 README 声明 MIT，但当前尚未补齐所需的完整许可文件及版权声明。本仓库没有将“已公开源码”等同于已完善开源授权，也未擅自添加 MIT 标识。复用与再分发前请查看 **[UPSTREAM.md](UPSTREAM.md)** 中的待确认事项。
-
-1.5.8：视频卡片结果精简为百分比，无可用字幕时显示“无文案”；完整说明可悬停查看。
-
-1.5.9：插件自动连接本机服务，移除手动连接码输入和复制步骤，连接失效后自动重新连接。
+从源码运行需进入 `local-server/` 执行 `npm ci`；启动文件也会在源码依赖缺失时尝试安装。发布包中的服务依赖已经合并进服务文件。
