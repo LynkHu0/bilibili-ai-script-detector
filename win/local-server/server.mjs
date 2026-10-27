@@ -48,7 +48,7 @@ function page(message='设置已迁移到浏览器插件。请打开插件设置
 const loginLaunches=new Map();
 function pluginSettings(){
  const c=providers.config,active=auth.active();
- const models=new Map([...catalog.models.map(m=>[m.slug,m.name]),...['gpt-6-luna','gpt-6-sol','gpt-6.1-sol','gpt-6-astra','gpt-6.1-terra','gpt-5.6-luna','gpt-5.6-sol','gpt-5.6-terra'].map(id=>[id,id])]);
+ const models=new Map([...['gpt-6-astra','gpt-6.1-sol','gpt-6.1-terra','gpt-6-sol','gpt-6-luna','gpt-5.6-sol','gpt-5.6-terra','gpt-5.6-luna'].map(id=>[id,id]),...catalog.models.map(m=>[m.slug,m.name])]);
  if(!models.has(c.chatgptModel))models.set(c.chatgptModel,c.chatgptModel);
  return {status:publicStatus(),config:{provider:c.provider,model:c.model,thinking:c.thinking,thinkingEffort:c.thinkingEffort,maxConcurrent:c.maxConcurrent,transcriptLimit:c.transcriptLimit,chatgptModel:c.chatgptModel,chatgptEffort:c.chatgptEffort,apiKeySet:!!c.apiKey},accounts:auth.data.accounts.map(a=>({id:a.client_id,email:a.email || 'ChatGPT 账户',active:a.client_id===active?.client_id,loggedIn:!!a.access_token})),models:[...models].map(([id,name])=>({id,name,available:catalog.models.some(m=>m.slug===id)})),modelNotice:catalog.error};
 }
@@ -125,7 +125,7 @@ const server=http.createServer(async(req,res)=>{
    if(!identity())return send(401,{error:providers.config.provider==='deepseek'?'请先在本地设置页面填写DeepSeek API Key。':'请先在本地设置页面登录ChatGPT。'});
    if(busy)return send(429,{error:'模型连接测试正在进行，请稍后重试。'});
    const data=JSON.parse(await readBody(req));
-   if(!/^bili:BV[a-zA-Z0-9]{10}:\d+$/.test(data.videoId) || typeof data.transcript!=='string' || data.transcript.trim().length<50)return send(422,{error:'视频编号无效或字幕不足50字。'});
+   if(!/^bili:BV[a-zA-Z0-9]{10}:\d+$/.test(data.videoId) || typeof data.transcript!=='string' || !data.transcript.trim().length)return send(422,{error:'视频编号无效或字幕为空。'});
    const transcript=data.transcript.slice(0,providers.config.transcriptLimit);
    const key=createHash('sha256').update(identity()+providers.info().model+providers.info().effort+PROMPT_VERSION+data.videoId+transcript).digest('hex');
    if(cache.has(key))return send(200,{status:'completed',result:{...cache.get(key),cached:true}});

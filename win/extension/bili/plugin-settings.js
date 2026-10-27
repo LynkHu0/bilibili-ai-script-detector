@@ -14,7 +14,7 @@
   const c=data.config;if(!c)throw new Error('本机程序版本较旧，请更新后重启。');
   for(const [id,key] of [['provider','provider'],['max-concurrent','maxConcurrent'],['transcript-limit','transcriptLimit'],['chatgpt-effort','chatgptEffort'],['deepseek-model','model'],['deepseek-thinking','thinking'],['deepseek-effort','thinkingEffort']])$(id).value=String(c[key]);
   $('deepseek-key').value='';$('deepseek-key').placeholder=c.apiKeySet?'已保存，留空保留现有 Key':'填写 DeepSeek API Key';$('clear-key').checked=false;
-  $('model-notice').textContent=data.modelNotice || '可选择账户模型或输入你有权限使用的模型 ID。';
+  $('model-notice').textContent=data.modelNotice || '';
   const picker=$('chatgpt-model');picker.replaceChildren();
   const models=[...(data.models || [])];if(!models.some(m=>m.id===c.chatgptModel))models.push({id:c.chatgptModel,name:c.chatgptModel});
   for(const m of models){const option=document.createElement('option');option.value=m.id;option.textContent=m.name+(m.available===false?'（备用候选，权限以实际调用为准）':'');picker.append(option);}
@@ -48,7 +48,7 @@
  $('refresh-config').onclick=load;
  $('add-account').onclick=()=>login(null);
  $('logout-account').onclick=()=>perform(async()=>{const d=await api('/api/auth/logout',{});render(d);await syncIdentity();message(d.message);});
- for(const [id,key] of [['show-percentage','biliShowPercentage'],['show-glow','biliShowGlow']]){
+ for(const [id,key] of [['show-percentage','biliShowPercentage'],['show-glow','biliShowGlow'],['auto-report','biliAutoReport']]){
   chrome.storage.local.get(key).then(d=>$(id).checked=d[key]!==false).catch(()=>{});
   $(id).addEventListener('change',()=>{chrome.storage.local.set({[key]:!!$(id).checked}).catch(e=>message(e.message,true));});
  }

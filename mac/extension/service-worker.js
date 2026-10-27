@@ -145,4 +145,4 @@ async function updateBadge(tabId, score) {
 
 importScripts('bili/local-service.js', 'bili/core.js', 'bili/background.js');
 
-importScripts('billing/background.js');
+importScripts('billing/background.js', 'bili/auto-report.js');

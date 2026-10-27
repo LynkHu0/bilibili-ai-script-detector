@@ -183,6 +183,7 @@
     </section>
       <label class="switch-row" for="show-percentage"><input id="show-percentage" type="checkbox" checked><span>显示封面百分比</span></label>
       <label class="switch-row" for="show-glow"><input id="show-glow" type="checkbox" checked><span>显示封面颜色光晕</span></label>
+      <label class="switch-row" for="auto-report"><input id="auto-report" type="checkbox" checked><span>播放页自动弹出检测报告</span></label>
       <label class="switch-row" for="auto-detect">
         <input id="auto-detect" type="checkbox">
         <span>自动检测可见的视频卡片</span>
@@ -199,9 +200,8 @@
       <form id="provider-form">
         <label for="provider">检测服务</label>
         <select id="provider"><option value="chatgpt">ChatGPT 套餐</option><option value="deepseek">DeepSeek API</option></select>
-        <label for="transcript-limit">检测字数</label><input id="transcript-limit" type="number" min="50" max="100000" step="1" value="15000" required>
-        <p class="settings-hint">最多检测开头的字符数，默认 15000（50–100000）。字幕较短时全部检测。</p>
-        <label for="max-concurrent">并发任务数（1–100）</label><input id="max-concurrent" type="number" min="1" max="100" step="1" value="10" required>
+        <label for="transcript-limit">检测字数</label><input id="transcript-limit" type="number" min="50" max="100000" step="1" value="1000" required>
+        <label for="max-concurrent">并发任务数（1–100）</label><input id="max-concurrent" type="number" min="1" max="100" step="1" value="15" required>
         <div id="chatgpt-config">
           <label for="chatgpt-model">ChatGPT 模型</label><select id="chatgpt-model" required></select><input id="custom-chatgpt-model" autocomplete="off" placeholder="输入模型 ID" hidden>
           <label for="chatgpt-effort">推理强度</label><select id="chatgpt-effort"><option value="auto">auto</option><option value="none">none</option><option value="minimal">minimal</option><option value="low">low</option><option value="medium">medium</option><option value="high">high</option><option value="xhigh">xhigh</option><option value="max">max</option><option value="ultra">ultra</option></select>

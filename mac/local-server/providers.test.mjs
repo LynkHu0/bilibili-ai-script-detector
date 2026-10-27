@@ -15,7 +15,7 @@ test('key stored privately; public status hides key; model changes isolate cache
  try{
   const p=new Providers(dir);await p.init();assert.equal(p.info().provider,'chatgpt');
   await p.save(new URLSearchParams({provider:'deepseek',model:'deepseek-flash',thinking:'disabled',thinkingEffort:'low',apiKey:'test-only-secret-1234'}));
-  const initial=p.info();assert.equal(initial.connected,true);assert.equal(JSON.stringify(initial).includes('test-only-secret'),false);assert.equal(initial.effort,'none');assert.equal(initial.maxConcurrent,10);
+  const initial=p.info();assert.equal(initial.connected,true);assert.equal(JSON.stringify(initial).includes('test-only-secret'),false);assert.equal(initial.effort,'none');assert.equal(initial.maxConcurrent,15);
   assert.equal((await stat(p.file)).mode&0o777,0o600);
   const restored=new Providers(dir);await restored.init();assert.equal(restored.info().cacheIdentity,initial.cacheIdentity);
   await p.save(new URLSearchParams({provider:'deepseek',model:'deepseek-v4-pro',thinking:'enabled',thinkingEffort:'max',apiKey:''}));assert.notEqual(p.info().cacheIdentity,initial.cacheIdentity);assert.equal(p.info().effort,'max');assert.equal(p.config.apiKey,'test-only-secret-1234');

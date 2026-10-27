@@ -57,7 +57,7 @@ async function biliAnalyze({bvid,p},progress=()=>{}) {
   if (url.protocol !== 'https:' || !/(^|\.)(hdslb\.com|bilibili\.com)$/.test(url.hostname)) throw new Error('字幕地址域名不受支持。');
   const captions = await BiliSlop.json(url.href);
   const transcript = (captions.body || []).map(s => s.content || '').join('\n').trim();
-  if (transcript.length < 50) throw new Error('字幕不足50字，暂不检测。');
+  if (!transcript) {const e=new Error('字幕内容为空；此视频暂时无法检测。');e.code='NO_SUBTITLES';throw e;}
   const response = await BiliLocal.request('/api/jobs', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body:JSON.stringify({videoId, transcript}), signal:AbortSignal.timeout(10000)

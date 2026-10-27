@@ -16,7 +16,7 @@ test('both providers honor limits below and above the previous cap',()=>{
 test('character limit defaults, persists, and rejects invalid values',async()=>{
  const dir=await mkdtemp(path.join(tmpdir(),'slop-limit-'));
  try{
- const p=new Providers(dir);await p.init();assert.equal(p.config.transcriptLimit,15000);
+ const p=new Providers(dir);await p.init();assert.equal(p.config.transcriptLimit,1000);
  await p.save(new URLSearchParams({provider:'chatgpt',transcriptLimit:'25000'}));
  const restored=new Providers(dir);await restored.init();assert.equal(restored.info().transcriptLimit,25000);
  for(const value of ['0','49','100001','2.5','abc',''])await assert.rejects(p.save(new URLSearchParams({provider:'chatgpt',transcriptLimit:value})),/检测字数/);

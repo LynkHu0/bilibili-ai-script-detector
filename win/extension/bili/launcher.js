@@ -15,7 +15,7 @@ function render(result){
  $('gauge-fill').setAttribute('stroke-dashoffset',String(251.33*(1-score)));
  $('gauge-needle').setAttribute('transform',`rotate(${score*180-90}, 100, 100)`);
  $('verdict').className=`verdict verdict--${kind}`;
- $('verdict-text').textContent=BiliSlop.label(score);
+ $('verdict-text').textContent=BiliSlop.label(score)+(result.analyzedCharacters<50?'（字幕较少）':'');
  show('state-result');
 }
 function applyTheme(theme){
@@ -105,7 +105,7 @@ async function refreshService(){
   $('service-status').textContent=serviceState.stopping?'正在停止检测服务':serviceState.occupied||serviceState.legacy?'旧版服务占用检测端口':serviceState.running?'正在运行检测服务':'没有运行检测服务';
   $('service-toggle').textContent=serviceState.stopping?'正在停止…':serviceState.running?'停止检测服务':'启动检测服务';
   $('service-toggle').disabled=!serviceState.installed || !!serviceState.stopping || !!serviceState.occupied;
-  $('service-hint').textContent=serviceError || (!serviceState.installed?'请先运行安装包中的“安装本机组件”，再加载安装程序打开的新版扩展。':serviceState.message || (serviceState.stopping?'正在等待已提交的模型请求完成；未开始的任务已取消。':'后台运行，无需保留终端窗口。'));
+  $('service-hint').textContent=serviceError || (!serviceState.installed?'请先运行安装包中的“安装本机组件”，再加载安装程序打开的新版扩展。':serviceState.message || (serviceState.stopping?'正在等待已提交的模型请求完成；未开始的任务已取消。':''));
  }catch(e){$('service-hint').textContent=e.message;}finally{servicePoll=false;}
 }
 $('service-toggle').onclick=async()=>{

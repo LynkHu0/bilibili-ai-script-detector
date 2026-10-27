@@ -53,7 +53,7 @@
     }
 
     if(anchor&&!state.showGlow)clearGlow(anchor);
-    button.textContent=`${Math.round(result.score*100)}%`;
+    button.textContent=`${Math.round(result.score*100)}%${result.analyzedCharacters<50?"（字幕较少）":""}`;
     button.style.background=result.score>.7?'#a9233aeb':result.score<.4?'#17624deb':'#795b19eb';
     button.title=`${result.provider==='deepseek'?'DeepSeek API':'ChatGPT 套餐'} · ${result.engine || 'gpt-6-luna'} · 本机已检测结果；启发式评分，不能证明创作来源`;
   }
