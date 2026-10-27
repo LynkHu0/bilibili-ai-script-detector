@@ -32,14 +32,15 @@ const cache=new Map();const queue=new AnalysisQueue({limit:100,concurrency:provi
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function equal(a,b){const aa=Buffer.from(a || ''),bb=Buffer.from(b);return aa.length===bb.length && timingSafeEqual(aa,bb);}
 function chatgptIdentity(){const a=auth.active();return a?.access_token?createHash('sha256').update(a.client_id+':'+a.subject).digest('hex').slice(0,24):null;}
-function identity(){return providers.config.provider==='deepseek'?providers.info().cacheIdentity:(chatgptIdentity()?chatgptIdentity()+':'+providers.info().model+':'+providers.info().effort:null);}
+function providerIdentity(){return providers.config.provider==='deepseek'?providers.info().cacheIdentity:(chatgptIdentity()?chatgptIdentity()+':'+providers.info().model+':'+providers.info().effort:null);}
+function identity(){const id=providerIdentity();return id&&providers.config.transcriptLimit!==15000?id+':chars:'+providers.config.transcriptLimit:id;}
 function usageScope(provider=providers.config.provider){return provider==='deepseek'?(providers.config.apiKey?'ds:'+createHash('sha256').update(providers.config.apiKey).digest('hex').slice(0,24):null):chatgptIdentity();}
 function currentUsage(){return {...ledger.summary(providers.config.provider,usageScope()),officialDeepseek:providers.config.provider==='deepseek'?official.get(usageScope('deepseek')):null};}
 async function logUsage(event){try{await ledger.record(event);ledger.persistenceError=false;}catch{ledger.persistenceError=true;console.error('用量记录暂未写入磁盘；显示值可能在重启后丢失。');}}
 async function inferConfiguredDeepseek(transcript,kind='detect'){const config={...providers.config},scope=usageScope('deepseek');return inferDeepseek(transcript,config,fetch,e=>logUsage({...e,provider:'deepseek',scope,model:config.model,kind}));}
 function publicStatus(){return {...providers.info(),connected:!!identity(),promptVersion:PROMPT_VERSION,cacheIdentity:identity()};}
 async function readBody(req){
- let body='';for await(const c of req){body+=c;if(Buffer.byteLength(body)>150000)throw new Error('请求内容过长。');}return body;
+ let body='';for await(const c of req){body+=c;if(Buffer.byteLength(body)>1000000)throw new Error('请求内容过长。');}return body;
 }
 function page(message='设置已迁移到浏览器插件。请打开插件设置，选择服务或管理账号。'){
  return `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>B站文案检测</title><body><h1>B站文案检测</h1><p>${esc(message)}</p></body></html>`;
@@ -49,7 +50,7 @@ function pluginSettings(){
  const c=providers.config,active=auth.active();
  const models=new Map([...catalog.models.map(m=>[m.slug,m.name]),...['gpt-6-luna','gpt-6-sol','gpt-6.1-sol','gpt-6-astra','gpt-5.6-luna','gpt-5.6-sol','gpt-5.6-terra'].map(id=>[id,id])]);
  if(!models.has(c.chatgptModel))models.set(c.chatgptModel,c.chatgptModel);
- return {status:publicStatus(),config:{provider:c.provider,model:c.model,thinking:c.thinking,thinkingEffort:c.thinkingEffort,maxConcurrent:c.maxConcurrent,chatgptModel:c.chatgptModel,chatgptEffort:c.chatgptEffort,apiKeySet:!!c.apiKey},accounts:auth.data.accounts.map(a=>({id:a.client_id,email:a.email || 'ChatGPT 账户',active:a.client_id===active?.client_id,loggedIn:!!a.access_token})),models:[...models].map(([id,name])=>({id,name})),modelNotice:catalog.error};
+ return {status:publicStatus(),config:{provider:c.provider,model:c.model,thinking:c.thinking,thinkingEffort:c.thinkingEffort,maxConcurrent:c.maxConcurrent,transcriptLimit:c.transcriptLimit,chatgptModel:c.chatgptModel,chatgptEffort:c.chatgptEffort,apiKeySet:!!c.apiKey},accounts:auth.data.accounts.map(a=>({id:a.client_id,email:a.email || 'ChatGPT 账户',active:a.client_id===active?.client_id,loggedIn:!!a.access_token})),models:[...models].map(([id,name])=>({id,name})),modelNotice:catalog.error};
 }
 function settingsBusy(){return stopping || busy || queue.busy;}
 async function infer(input,kind='detect'){
@@ -94,7 +95,7 @@ const server=http.createServer(async(req,res)=>{
     if(settingsBusy())return send(409,{error:'请等待正在进行的检测完成后重试；可先关闭自动检测。'});
     const body=JSON.parse(await readBody(req));
     if(url.pathname==='/api/settings'){
-     const form=new URLSearchParams();for(const key of ['provider','model','thinking','thinkingEffort','maxConcurrent','chatgptModel','chatgptEffort','apiKey','clearKey'])if(body[key]!==undefined)form.set(key,String(body[key]));
+     const form=new URLSearchParams();for(const key of ['provider','model','thinking','thinkingEffort','maxConcurrent','transcriptLimit','chatgptModel','chatgptEffort','apiKey','clearKey'])if(body[key]!==undefined)form.set(key,String(body[key]));
      await providers.save(form);queue.setConcurrency(providers.config.maxConcurrent);return send(200,pluginSettings());
     }
     if(url.pathname==='/api/auth/start'){
@@ -125,13 +126,13 @@ const server=http.createServer(async(req,res)=>{
    if(busy)return send(429,{error:'模型连接测试正在进行，请稍后重试。'});
    const data=JSON.parse(await readBody(req));
    if(!/^bili:BV[a-zA-Z0-9]{10}:\d+$/.test(data.videoId) || typeof data.transcript!=='string' || data.transcript.trim().length<50)return send(422,{error:'视频编号无效或字幕不足50字。'});
-   const transcript=data.transcript.slice(0,15000);
+   const transcript=data.transcript.slice(0,providers.config.transcriptLimit);
    const key=createHash('sha256').update(identity()+providers.info().model+providers.info().effort+PROMPT_VERSION+data.videoId+transcript).digest('hex');
    if(cache.has(key))return send(200,{status:'completed',result:{...cache.get(key),cached:true}});
    const account=identity(),selected=providers.info();
    const job=queue.enqueue(key,account,async()=>{
     if(identity()!==account)throw new Error('当前登录账户已改变，请重新提交检测。');
-    const raw=selected.provider==='deepseek'?await inferConfiguredDeepseek(transcript):await infer(requestBody(transcript,{model:selected.model,effort:selected.effort}));
+    const raw=selected.provider==='deepseek'?await inferConfiguredDeepseek(transcript):await infer(requestBody(transcript,{model:selected.model,effort:selected.effort,transcriptLimit:selected.transcriptLimit}));
     const result={...validateResult(raw,{engine:selected.model,effort:selected.effort,provider:selected.provider}),videoId:data.videoId,found:true,analyzedCharacters:transcript.length,cacheIdentity:account};
     if(cache.size>=200)cache.delete(cache.keys().next().value);cache.set(key,result);return result;
    });

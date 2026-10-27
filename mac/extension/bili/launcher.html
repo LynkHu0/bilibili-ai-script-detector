@@ -199,6 +199,8 @@
       <form id="provider-form">
         <label for="provider">检测服务</label>
         <select id="provider"><option value="chatgpt">ChatGPT 套餐</option><option value="deepseek">DeepSeek API</option></select>
+        <label for="transcript-limit">检测字数</label><input id="transcript-limit" type="number" min="50" max="100000" step="1" value="15000" required>
+        <p class="settings-hint">最多检测开头的字符数，默认 15000（50–100000）。字幕较短时全部检测。</p>
         <label for="max-concurrent">并发任务数（1–100）</label><input id="max-concurrent" type="number" min="1" max="100" step="1" value="10" required>
         <div id="chatgpt-config">
           <label for="chatgpt-model">ChatGPT 模型</label><input id="chatgpt-model" list="chatgpt-models" autocomplete="off" required><datalist id="chatgpt-models"></datalist>

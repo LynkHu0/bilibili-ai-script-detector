@@ -4,9 +4,9 @@ import {createHash} from 'node:crypto';
 import {savePrivate} from './auth.mjs';
 import {MODEL,EFFORT,instructions} from './inference.mjs';
 export class Providers {
- constructor(dir){this.file=path.join(dir,'providers.json');this.config={provider:'chatgpt',model:'deepseek-flash',thinking:'disabled',thinkingEffort:'high',maxConcurrent:10,apiKey:'',chatgptModel:MODEL,chatgptEffort:EFFORT};}
- async init(){try{const saved=JSON.parse(await readFile(this.file,'utf8'));this.config={...this.config,...saved};}catch(e){if(e.code!=='ENOENT')throw e;}if(!Number.isInteger(this.config.maxConcurrent)||this.config.maxConcurrent<1||this.config.maxConcurrent>100)this.config.maxConcurrent=10;}
- info(){const c=this.config,effort=c.thinking==='enabled'?c.thinkingEffort:'none';return c.provider==='deepseek'?{provider:'deepseek',model:c.model,effort,maxConcurrent:c.maxConcurrent,connected:!!c.apiKey,cacheIdentity:c.apiKey?'ds:'+createHash('sha256').update(JSON.stringify([c.apiKey,c.model,effort])).digest('hex').slice(0,24):null}:{provider:'chatgpt',model:c.chatgptModel,effort:c.chatgptEffort,maxConcurrent:c.maxConcurrent};}
+ constructor(dir){this.file=path.join(dir,'providers.json');this.config={provider:'chatgpt',model:'deepseek-flash',thinking:'disabled',thinkingEffort:'high',maxConcurrent:10,transcriptLimit:15000,apiKey:'',chatgptModel:MODEL,chatgptEffort:EFFORT};}
+ async init(){try{const saved=JSON.parse(await readFile(this.file,'utf8'));this.config={...this.config,...saved};}catch(e){if(e.code!=='ENOENT')throw e;}if(!Number.isInteger(this.config.maxConcurrent)||this.config.maxConcurrent<1||this.config.maxConcurrent>100)this.config.maxConcurrent=10;if(!Number.isInteger(this.config.transcriptLimit)||this.config.transcriptLimit<50||this.config.transcriptLimit>100000)this.config.transcriptLimit=15000;}
+ info(){const c=this.config,effort=c.thinking==='enabled'?c.thinkingEffort:'none';return c.provider==='deepseek'?{provider:'deepseek',model:c.model,effort,maxConcurrent:c.maxConcurrent,transcriptLimit:c.transcriptLimit,connected:!!c.apiKey,cacheIdentity:c.apiKey?'ds:'+createHash('sha256').update(JSON.stringify([c.apiKey,c.model,effort])).digest('hex').slice(0,24):null}:{provider:'chatgpt',model:c.chatgptModel,effort:c.chatgptEffort,maxConcurrent:c.maxConcurrent,transcriptLimit:c.transcriptLimit};}
  async save(form){
   const provider=form.get('provider');if(!['chatgpt','deepseek'].includes(provider))throw new Error('请选择ChatGPT套餐或DeepSeek API。');
   const model=form.get('model') || this.config.model,thinking=form.get('thinking') || this.config.thinking;
@@ -14,19 +14,21 @@ export class Providers {
   if(!['deepseek-flash','deepseek-v4-pro'].includes(model) || !['enabled','disabled'].includes(thinking) || !['low','high','max'].includes(thinkingEffort))throw new Error('DeepSeek模型、思考模式或思考强度无效。');
   const rawConcurrency=form.get('maxConcurrent'),maxConcurrent=rawConcurrency===null?this.config.maxConcurrent:Number(rawConcurrency);
   if(!Number.isInteger(maxConcurrent)||maxConcurrent<1||maxConcurrent>100)throw new Error('并发任务数必须为1到100的整数。');
+  const rawLimit=form.get('transcriptLimit'),transcriptLimit=rawLimit===null?this.config.transcriptLimit:Number(rawLimit);
+  if(!Number.isInteger(transcriptLimit)||transcriptLimit<50||transcriptLimit>100000)throw new Error('检测字数必须为50到100000的整数。');
   const supplied=(form.get('apiKey') || '').trim();
   if(supplied && (supplied.length<10 || supplied.length>512 || /\s/.test(supplied)))throw new Error('API Key格式不正确，请完整粘贴。');
   const apiKey=form.get('clearKey')==='yes'?'':supplied || this.config.apiKey;
   const chatgptModel=(form.get('chatgptModel') || this.config.chatgptModel).trim(),chatgptEffort=form.get('chatgptEffort') || this.config.chatgptEffort;
   if(!/^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$/.test(chatgptModel))throw new Error('ChatGPT模型ID格式无效。');
   if(!['auto','none','minimal','low','medium','high','xhigh','max','ultra'].includes(chatgptEffort))throw new Error('ChatGPT推理强度无效。');
-  const next={provider,model,thinking,thinkingEffort,maxConcurrent,apiKey,chatgptModel,chatgptEffort};
+  const next={provider,model,thinking,thinkingEffort,maxConcurrent,transcriptLimit,apiKey,chatgptModel,chatgptEffort};
   if(provider==='deepseek' && !apiKey)throw new Error('请填写DeepSeek API Key后保存。');
   await savePrivate(this.file,next);this.config=next;
  }
 }
-export function deepseekBody(transcript,{model,thinking,thinkingEffort='high'}){
- return {model,thinking:{type:thinking},...(thinking==='enabled'?{reasoning_effort:thinkingEffort}:{}),stream:false,...(thinking==='disabled'?{max_tokens:128}:{}),response_format:{type:'json_object'},messages:[{role:'system',content:instructions},{role:'user',content:JSON.stringify({transcript:transcript.slice(0,15000)})}]};
+export function deepseekBody(transcript,{model,thinking,thinkingEffort='high',transcriptLimit=15000}){
+ return {model,thinking:{type:thinking},...(thinking==='enabled'?{reasoning_effort:thinkingEffort}:{}),stream:false,...(thinking==='disabled'?{max_tokens:128}:{}),response_format:{type:'json_object'},messages:[{role:'system',content:instructions},{role:'user',content:JSON.stringify({transcript:transcript.slice(0,transcriptLimit)})}]};
 }
 export async function inferDeepseek(transcript,config,fetcher=fetch,onUsage=async()=>{}){
  if(!config.apiKey)throw new Error('请先配置DeepSeek API Key。');

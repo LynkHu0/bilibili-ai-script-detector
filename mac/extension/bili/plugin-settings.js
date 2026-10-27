@@ -11,7 +11,7 @@
  function thinking(){$('deepseek-effort-row').hidden=$('deepseek-thinking').value!=='enabled';}
  function render(data){
   const c=data.config;if(!c)throw new Error('本机程序版本较旧，请更新后重启。');
-  for(const [id,key] of [['provider','provider'],['max-concurrent','maxConcurrent'],['chatgpt-model','chatgptModel'],['chatgpt-effort','chatgptEffort'],['deepseek-model','model'],['deepseek-thinking','thinking'],['deepseek-effort','thinkingEffort']])$(id).value=String(c[key]);
+  for(const [id,key] of [['provider','provider'],['max-concurrent','maxConcurrent'],['transcript-limit','transcriptLimit'],['chatgpt-model','chatgptModel'],['chatgpt-effort','chatgptEffort'],['deepseek-model','model'],['deepseek-thinking','thinking'],['deepseek-effort','thinkingEffort']])$(id).value=String(c[key]);
   $('deepseek-key').value='';$('deepseek-key').placeholder=c.apiKeySet?'已保存，留空保留现有 Key':'填写 DeepSeek API Key';$('clear-key').checked=false;
   $('model-notice').textContent=data.modelNotice || '可选择账户模型或输入你有权限使用的模型 ID。';
   $('chatgpt-models').replaceChildren();for(const m of data.models || []){const option=document.createElement('option');option.value=m.id;option.label=m.name;$('chatgpt-models').append(option);}
@@ -36,8 +36,8 @@
  async function login(account){await perform(async()=>{const data=await api('/api/auth/start',{account});const url=new URL(data.launchUrl);if(url.origin!=='http://127.0.0.1:17653'||url.pathname!=='/auth/launch')throw new Error('登录入口地址无效。');await chrome.tabs.create({url:url.href});message('请在 OpenAI 页面完成授权，再回到插件。');});}
  $('provider').addEventListener('change',selectProvider);$('deepseek-thinking').addEventListener('change',thinking);
  $('provider-form').addEventListener('submit',event=>{event.preventDefault();perform(async()=>{
-  const body={provider:$('provider').value,maxConcurrent:$('max-concurrent').value,chatgptModel:$('chatgpt-model').value.trim(),chatgptEffort:$('chatgpt-effort').value,model:$('deepseek-model').value,thinking:$('deepseek-thinking').value,thinkingEffort:$('deepseek-effort').value,apiKey:$('deepseek-key').value.trim(),clearKey:$('clear-key').checked?'yes':''};
-  const data=await api('/api/settings',body);$('deepseek-key').value='';render(data);await syncIdentity();message('服务与并发设置已保存。');
+  const body={provider:$('provider').value,maxConcurrent:$('max-concurrent').value,transcriptLimit:$('transcript-limit').value,chatgptModel:$('chatgpt-model').value.trim(),chatgptEffort:$('chatgpt-effort').value,model:$('deepseek-model').value,thinking:$('deepseek-thinking').value,thinkingEffort:$('deepseek-effort').value,apiKey:$('deepseek-key').value.trim(),clearKey:$('clear-key').checked?'yes':''};
+  const data=await api('/api/settings',body);$('deepseek-key').value='';render(data);await syncIdentity();message('检测设置已保存。');
  });});
  $('refresh-models').onclick=()=>perform(async()=>{render(await api('/api/models/refresh',{}));message('模型列表已更新。');});
  $('refresh-config').onclick=load;
