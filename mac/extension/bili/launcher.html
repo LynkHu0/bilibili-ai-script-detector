@@ -203,7 +203,7 @@
         <p class="settings-hint">最多检测开头的字符数，默认 15000（50–100000）。字幕较短时全部检测。</p>
         <label for="max-concurrent">并发任务数（1–100）</label><input id="max-concurrent" type="number" min="1" max="100" step="1" value="10" required>
         <div id="chatgpt-config">
-          <label for="chatgpt-model">ChatGPT 模型</label><input id="chatgpt-model" list="chatgpt-models" autocomplete="off" required><datalist id="chatgpt-models"></datalist>
+          <label for="chatgpt-model">ChatGPT 模型</label><select id="chatgpt-model" required></select><input id="custom-chatgpt-model" autocomplete="off" placeholder="输入模型 ID" hidden>
           <label for="chatgpt-effort">推理强度</label><select id="chatgpt-effort"><option value="auto">auto</option><option value="none">none</option><option value="minimal">minimal</option><option value="low">low</option><option value="medium">medium</option><option value="high">high</option><option value="xhigh">xhigh</option><option value="max">max</option><option value="ultra">ultra</option></select>
           <p id="model-notice" class="settings-hint"></p><button id="refresh-models" class="btn btn-retry" type="button">刷新模型列表</button>
         </div>

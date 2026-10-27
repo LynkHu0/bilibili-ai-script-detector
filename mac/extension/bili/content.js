@@ -14,10 +14,10 @@
   style.textContent='.bili-slop-check{position:absolute;top:5px;left:5px;z-index:12;border:0;border-radius:5px;padding:5px 7px;background:#242737eb;color:white;font:12px system-ui;cursor:pointer}.bili-slop-check:disabled{opacity:.72;cursor:default}';
   // Cover-only glow: title and creator rows remain unchanged.
   style.textContent+=`
-    a[data-bili-slop-glow="green"]{--bili-slop-glow-rgb:52,211,153}
-    a[data-bili-slop-glow="orange"]{--bili-slop-glow-rgb:251,146,60}
-    a[data-bili-slop-glow="red"]{--bili-slop-glow-rgb:248,113,113}
-    a[data-bili-slop-glow]::after{
+    [data-bili-slop-glow="green"]{--bili-slop-glow-rgb:52,211,153}
+    [data-bili-slop-glow="orange"]{--bili-slop-glow-rgb:251,146,60}
+    [data-bili-slop-glow="red"]{--bili-slop-glow-rgb:248,113,113}
+    [data-bili-slop-glow]::after{
       content:"";position:absolute;inset:0;z-index:11;pointer-events:none;
       border-radius:var(--bili-slop-glow-radius,6px);
       box-shadow:inset 0 0 0 2px rgba(var(--bili-slop-glow-rgb),.98),
@@ -47,7 +47,7 @@
     button.hidden=!state.showPercentage;
     if(anchor && state.showGlow){
       const media=anchor.querySelector('.bili-video-card__image,img,picture,video');
-      const radius=media?getComputedStyle(media).borderRadius:'6px';
+      const radius=getComputedStyle(anchor).borderRadius || (media?getComputedStyle(media).borderRadius:'6px');
       anchor.style.setProperty('--bili-slop-glow-radius',radius&&radius!=='0px'?radius:'6px');
       anchor.setAttribute('data-bili-slop-glow',result.score>.7?'red':result.score<.4?'green':'orange');
     }
@@ -75,12 +75,13 @@
 
   function alive(record){
     if(record.stale || cards.get(record.anchor)!==record)return false;
+    if(record.cover.isConnected===false)return false;
     const video=BiliSlop.parse(record.anchor.href);
     return !!video && `${video.bvid}:${video.p}`===record.identity;
   }
   function label(record,text,title){
     if(!alive(record))return;
-    clearGlow(record.anchor);record.result=null;record.button.hidden=false;
+    clearGlow(record.cover);record.result=null;record.button.hidden=false;
     record.button.textContent=text;record.button.title=title || '';
   }
   function clearTimer(record){
@@ -208,29 +209,35 @@
   }
 
   function resetCards(){
-    for(const record of live){clearTimer(record);clearGlow(record.anchor);record.stale=true;observer?.unobserve(record.anchor);}
+    for(const record of live){clearTimer(record);clearGlow(record.cover);record.stale=true;observer?.unobserve(record.anchor);}
     live.clear();pending.length=0;
     scan();
   }
 
   function scan(){
     for(const record of live){
-      if(record.anchor.isConnected===false){clearGlow(record.anchor);clearTimer(record);observer?.unobserve(record.anchor);live.delete(record);cards.delete(record.anchor);}
+      if(record.anchor.isConnected===false){clearGlow(record.cover);clearTimer(record);observer?.unobserve(record.anchor);live.delete(record);cards.delete(record.anchor);}
     }
     document.querySelectorAll('a[href*="/video/BV"]').forEach(a=>{
       if(!a.querySelector('img,picture,video'))return;
+      // Header menus nest a cover link inside a link wrapping the whole row.
+      // Only the innermost video link owns a marker; avatars are never covers.
+      const nested=a.querySelector('a[href*="/video/BV"]');
+      if(nested?.href)return;
+      const target=a.querySelector('.bili-dyn-card-video__cover,.cover,.bili-video-card__image');
+      const cover=target && typeof target.append==='function'?target:a;
       const video=BiliSlop.parse(a.href);if(!video)return;
       const identity=`${video.bvid}:${video.p}`;
       const previous=cards.get(a);
-      if(previous && !previous.stale && previous.identity===identity)return;
-      if(previous){clearTimer(previous);previous.stale=true;observer?.unobserve(previous.anchor);live.delete(previous);}
+      if(previous && !previous.stale && previous.identity===identity && previous.cover===cover)return;
+      if(previous){clearGlow(previous.cover);clearTimer(previous);previous.stale=true;observer?.unobserve(previous.anchor);live.delete(previous);}
       if(previous?.button)previous.button.remove();
       clearGlow(a);
-      if(getComputedStyle(a).position==='static')a.style.position='relative';
+      if(getComputedStyle(cover).position==='static')cover.style.position='relative';
       const button=document.createElement('button');button.className='bili-slop-check';button.type='button';button.textContent='检测文案';
       button.title=state.auto?'自动检测已开启：卡片进入可视区域后自动检测，也可点击立即检测':'点击检测文案';
-      const record={anchor:a,identity,button,state:'idle',visible:!observer,timer:null,manual:false,autoRetried:false,serviceError:false,stale:false};
-      cards.set(a,record);live.add(record);a.append(button);observer?.observe(a);
+      const record={anchor:a,cover,identity,button,state:'idle',visible:!observer,timer:null,manual:false,autoRetried:false,serviceError:false,stale:false};
+      cards.set(a,record);cards.set(cover,record);live.add(record);cover.append(button);observer?.observe(a);
       const key=`bili_card_plan_${video.bvid}_${video.p}`;
       chrome.storage.local.get([key,'biliProviderIdentity']).then(stored=>{
         if(!alive(record))return;

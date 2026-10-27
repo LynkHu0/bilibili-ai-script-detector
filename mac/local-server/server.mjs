@@ -48,9 +48,9 @@ function page(message='设置已迁移到浏览器插件。请打开插件设置
 const loginLaunches=new Map();
 function pluginSettings(){
  const c=providers.config,active=auth.active();
- const models=new Map([...catalog.models.map(m=>[m.slug,m.name]),...['gpt-6-luna','gpt-6-sol','gpt-6.1-sol','gpt-6-astra','gpt-5.6-luna','gpt-5.6-sol','gpt-5.6-terra'].map(id=>[id,id])]);
+ const models=new Map([...catalog.models.map(m=>[m.slug,m.name]),...['gpt-6-luna','gpt-6-sol','gpt-6.1-sol','gpt-6-astra','gpt-6.1-terra','gpt-5.6-luna','gpt-5.6-sol','gpt-5.6-terra'].map(id=>[id,id])]);
  if(!models.has(c.chatgptModel))models.set(c.chatgptModel,c.chatgptModel);
- return {status:publicStatus(),config:{provider:c.provider,model:c.model,thinking:c.thinking,thinkingEffort:c.thinkingEffort,maxConcurrent:c.maxConcurrent,transcriptLimit:c.transcriptLimit,chatgptModel:c.chatgptModel,chatgptEffort:c.chatgptEffort,apiKeySet:!!c.apiKey},accounts:auth.data.accounts.map(a=>({id:a.client_id,email:a.email || 'ChatGPT 账户',active:a.client_id===active?.client_id,loggedIn:!!a.access_token})),models:[...models].map(([id,name])=>({id,name})),modelNotice:catalog.error};
+ return {status:publicStatus(),config:{provider:c.provider,model:c.model,thinking:c.thinking,thinkingEffort:c.thinkingEffort,maxConcurrent:c.maxConcurrent,transcriptLimit:c.transcriptLimit,chatgptModel:c.chatgptModel,chatgptEffort:c.chatgptEffort,apiKeySet:!!c.apiKey},accounts:auth.data.accounts.map(a=>({id:a.client_id,email:a.email || 'ChatGPT 账户',active:a.client_id===active?.client_id,loggedIn:!!a.access_token})),models:[...models].map(([id,name])=>({id,name,available:catalog.models.some(m=>m.slug===id)})),modelNotice:catalog.error};
 }
 function settingsBusy(){return stopping || busy || queue.busy;}
 async function infer(input,kind='detect'){
