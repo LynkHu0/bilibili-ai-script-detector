@@ -1,18 +1,54 @@
 # Stop the Slop for Browser
 
-当前版本 **1.5.17**：服务和账号设置全部集成到浏览器插件，封面三色光晕正式加入；百分比与光晕可独立开关。无需本地 WebUI。
+一个 B 站视频文案检测插件。读取视频字幕，使用你的 ChatGPT 套餐或 DeepSeek API 分析文案，在视频封面显示疑似评分和颜色光晕。
 
-| 平台 | 安装教程 | 更新入口 |
-| --- | --- | --- |
-| macOS（Apple 芯片 / Intel 共用） | [mac/](mac/) | 安装本机组件.command |
-| Windows | [win/](win/) | 安装本机组件.bat |
+基于 [Stop the Slop](https://github.com/MauroPello/stop-the-slop) 的非官方 B 站适配。
 
-[下载最新轻量包](https://github.com/LynkHu0/stop-the-slop-for-brower/releases/latest)。先从 [Node.js 官网](https://nodejs.org/) 安装 22 或更新版本；包内不含 Node.js，服务依赖已合并。
+## 支持平台
 
-安装组件后加载永久位置的 extension。在插件内启动/停止服务、选择模型与推理强度、设置并发、添加/切换/退出 ChatGPT 账户或保存 DeepSeek Key，并查看用量。ChatGPT 登录自然会打开 OpenAI 官方授权页，完成后返回插件。所有操作仅在插件弹窗完成，不提供独立设置标签页。
+- macOS（Apple 芯片和 Intel）
+- Windows
+- Chrome、Edge 等支持加载扩展的浏览器
 
-已使用1.5.11或光晕测试版时无需删除扩展，更新本机组件后重新加载即可。账号配置与缓存保留。百分比和光晕默认开启，只改变显示，不增加检测调用；分数不能证明创作来源。
+## 功能
 
-“浏览器插件自动连接”“检查当前检测服务”两块旧界面已删除。详情见各平台 README、PRIVACY、UPSTREAM。
+- 自动检测可见的视频卡片，也可以手动检测
+- 在封面显示评分和光晕，可分别关闭
+- 使用 ChatGPT 套餐或 DeepSeek API，可选择模型和推理强度
+- 调整检测字数、并发数，查看本机用量
+- 缓存检测结果，减少重复请求
 
-1.5.17：默认仅显示简洁检测窗口。齿轮设置按用量→百分比→光晕→自动检测→服务开关→服务配置排列，删除独立标签页按钮与自动检测长描述。
+## 下载和安装
+
+从 [Releases](https://github.com/LynkHu0/stop-the-slop-for-browser/releases/latest) 下载对应系统的压缩包。
+
+1. 安装 [Node.js](https://nodejs.org/) 22 或更新版本。
+2. 解压下载的文件，运行安装本机组件程序。
+3. 在 Chrome 或 Edge 的扩展管理页开启开发者模式，选择“加载已解压的扩展程序”，加载安装程序提示的 `extension` 文件夹。
+4. 打开插件设置，启动检测服务，连接 ChatGPT 或填写 DeepSeek API Key。
+
+详细步骤：[macOS](mac/) · [Windows](win/)
+
+## 常见问题
+
+### 为什么有的视频显示“无文案”？
+
+插件目前读取 B 站返回的字幕。视频有旁白或画面字幕，但没有可读取的字幕时，暂时无法检测。
+
+### 分数代表什么？
+
+这是模型对字幕文案的疑似评分，未经概率校准，不能证明文案是否由 AI 创作。
+
+### 会产生费用吗？
+
+ChatGPT 检测使用已授权账户的套餐用量；DeepSeek 检测使用你自己的 API 余额。自动检测会增加请求次数，检测字数也可以在设置里调整。
+
+### 如何更新？
+
+下载新版本并运行安装本机组件程序，然后在浏览器扩展管理页重新加载插件，刷新 B 站页面。
+
+## 相关项目
+
+- [Shadowrocket 版](https://github.com/LynkHu0/stop-the-slop-for-shadowrocket)
+- [问题反馈](https://github.com/LynkHu0/stop-the-slop-for-browser/issues)
+- [隐私说明](mac/PRIVACY.md) · [上游与许可说明](mac/UPSTREAM.md)
